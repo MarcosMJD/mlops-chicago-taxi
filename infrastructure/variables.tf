@@ -1,0 +1,68 @@
+variable "aws_region" {
+  description = "AWS region to create resources"
+  default     = "eu-west-1"
+}
+
+variable "project_id" {
+  description = "project_id"
+  default     = "chicago_taxi"
+}
+
+variable "project_id_hyphens" {
+  description = "project id with hyphens"
+  default   = "chicago-taxi"
+}
+
+variable "s3_bucket_name" {
+  description = "Name of the S3 bucket for the project"
+}
+
+variable "rds_indentifier" {
+  description = "Name of the rds instance"
+  default     = "postgres"
+}
+
+variable "postgres_db_name" {
+  description = "Name of db in rds instance"
+  default     = "db_postgres"
+}
+
+variable "postgres_db_username" {
+  description = "User name of rds db"
+  default     = "db_user"
+}
+
+variable "postgres_db_password" {
+  description = "Password of rds db"
+  default     = "db_password"
+}
+
+variable "ecr_repo_name" {
+    type        = string
+    description = "ECR repo name"
+}
+
+variable "ecr_image_tag" {
+    type        = string
+    description = "Tag of the image"
+    default = "latest"
+}
+
+variable "lambda_function_local_path" {
+    type        = string
+    description = "Local path to lambda function / python file"
+}
+
+variable "docker_image_local_path" {
+    type        = string
+    description = "Local path to Dockerfile"
+}
+
+variable "lambda_function_name" {
+  description = "Name of the lambda function"  
+}
+
+variable "api_gateway_name" {
+  description = "Name of the api gateway"    
+}
+
