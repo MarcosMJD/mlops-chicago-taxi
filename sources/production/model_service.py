@@ -22,13 +22,20 @@ class ModelService:
             callback(pred)
         return (pred[0])
 
+    def set_model(self, model):
+        self.model = model
+
+
     def lambda_handler(self, input_data: dict):
 
         prediction = self.predict(input_data)
-        return {'prediction': prediction}
+        return {
+            'id': input_data['id'],
+            'prediction': prediction
+        }
 
 
-def load_model(s3_bucket_name: str, s3_bucket_folder: str, experiment_id: str, run_id: str):
+def get_model_s3(s3_bucket_name: str, s3_bucket_folder: str, experiment_id: str, run_id: str):
 
     model_location = f"s3://{s3_bucket_name}/{s3_bucket_folder}/{experiment_id}/{run_id}/artifacts/model"
 
@@ -36,7 +43,16 @@ def load_model(s3_bucket_name: str, s3_bucket_folder: str, experiment_id: str, r
 
     return model
 
-def init_model(s3_bucket_name: str, s3_bucket_folder: str, experiment_id: str, run_id: str):
-
-    model = load_model(s3_bucket_name, s3_bucket_folder, experiment_id, run_id)
+def load_model(model):
     return ModelService(model)
+
+def init_model_s3(s3_bucket_name: str, s3_bucket_folder: str, experiment_id: str, run_id: str):
+
+    model = get_model_s3(s3_bucket_name, s3_bucket_folder, experiment_id, run_id)
+    return load_model(model)
+
+def init_model_local(model_location: str):
+
+    model = mlflow.pyfunc.load_model(model_location)
+    return load_model(model)
+

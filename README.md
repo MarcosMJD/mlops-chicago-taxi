@@ -13,24 +13,49 @@ ToDo
 - Use logging in prefect
 - Use S3 to store datasets
 - Check no cache when using pipenv in Dockerfile
+- Improve paths in the tests. Use current python script file to import other modules, 
+  Similar to .sh files.
 - In dev system... maybe script: 
   - Set mlflow env var for the server
   - Set prefect to use prefect server api
-  - 
+  - Modify model and preprocessor to use pipeline or model
+  - ignore files in prefect
+  - Unit test lambda is loading S3 model actually. Find a way to avoid this.
 
 Bugs
 - Terraform state file not created in S3 backend.
+- Terraform output not working
+
 
 Continue
-- Deployment of model
-- Check TErrafor output not working
-- ignore files in prefect
-- Check mlflow folder in S3
-- Modify model and preprocessor to use pipeline or model
+
+- Quality checks
+- Test localstack aws gateway + ECR + lambda + S3
+- git-hooks pre-commit
+- Terraform. Set env vars to be used in lambda images
+- CI
+- CD
+- Deployment en Makefile?
 
 Notes
 
-To create programmatically an storage block in prefect:
+T
+
+## Usefull commands and snippets
+
+### Shell script
+
+Header of a sh script
+"#!/usr/bin/env bash"
+
+Returns the directory where the Bash script file is saved
+"$(dirname "$0")"
+
+Get last error code
+ERROR_CODE=$?
+
+### Prefect
+o create programmatically an storage block in prefect:
 from prefect.filesystems import S3
 block = S3(bucket_path="chicago-taxi-fc4rdz8d")
 block.save("example-block")
@@ -50,5 +75,22 @@ prefect agent start -q 'test'
 To run a flow
 prefect deployment run <FLOW_NAME>/<DEPLOYMENT_NAME>
 
+## aws cli and aws-api
 
+Download object from aws s3
+aws s3api get-object --bucket stg-chicago-taxi-fc4rdz8d --key mlflow/2/e4ff37b7254a408c86826fb2a25573a9/artifacts/model/conda.yaml ./conda.yaml
 
+Download folder from aws s3
+aws s3 cp s3://stg-chicago-taxi-fc4rdz8d/mlflow/2/e4ff37b7254a408c86826fb2a25573a9/artifacts/model ./model --recursive
+
+Get latest RUN_ID from latest S3 partition. In practice, this is generally picked up from a tool like MLflow or a DB
+
+export RUN_ID=$(aws s3api list-objects-v2 --bucket ${MODEL_BUCKET_DEV} \
+--query 'sort_by(Contents, &LastModified)[-1].Key' --output=text | cut -f2 -d/)
+
+Copy between buckets
+aws s3 sync s3://${MODEL_BUCKET_DEV} s3://${MODEL_BUCKET_PROD}
+
+Update lambda env vars
+https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
+aws lambda update-function-configuration --function-name ${LAMBDA_FUNCTION} --environment "Variables=${variables}"

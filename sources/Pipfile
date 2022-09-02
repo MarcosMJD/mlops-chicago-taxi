@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+scikit-learn = "==1.1.2"
+mlflow = "==1.28.0"
+prefect = "==2.2"
+pyarrow = "==9.0.0"
+pandas = "==1.4.4"
+requests = "*"
+boto3 = "==1.24.63"
+xgboost = "==1.6.2"
+hyperopt = "==0.2.7"
+s3fs = "==0.4.2"
+
+[dev-packages]
+jupyter = "*"
+matplotlib = "*"
+seaborn = "==0.11.2"
+pytest = "==7.1.2"
+deepdiff = "==5.8.1"
+pylint = "==2.14.4"
+black = "==22.6.0"
+isort = "==5.10.1"
+pre-commit = "==2.20.0"
+
+[requires]
+python_version = "3.9"
