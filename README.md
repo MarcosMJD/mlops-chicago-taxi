@@ -3,6 +3,12 @@
 prefect config set PREFECT_API_URL="http://<external-ip>:8080/api" Maybe can be done programmatically?
 export MLFLOW_TRACKING_URI="http://54.74.157.93:8080"
 
+Note:
+After git clone
+...After pipenv install --dev... (also pipenv shell?)
+... we must run pre-commit install, because .git folder is not cloned
+
+
 ToDo
 
 - Use pipelines or save dv as an artifact
@@ -13,9 +19,9 @@ ToDo
 - Use logging in prefect
 - Use S3 to store datasets
 - Check no cache when using pipenv in Dockerfile
-- Improve paths in the tests. Use current python script file to import other modules, 
+- Improve paths in the tests. Use current python script file to import other modules,
   Similar to .sh files.
-- In dev system... maybe script: 
+- In dev system... maybe script:
   - Set mlflow env var for the server
   - Set prefect to use prefect server api
   - Modify model and preprocessor to use pipeline or model
@@ -94,3 +100,10 @@ aws s3 sync s3://${MODEL_BUCKET_DEV} s3://${MODEL_BUCKET_PROD}
 Update lambda env vars
 https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
 aws lambda update-function-configuration --function-name ${LAMBDA_FUNCTION} --environment "Variables=${variables}"
+
+
+## Pre-commit
+
+Create a default precommit hoock:
+  pre-commit sample-config > .pre-commit-config.yaml
+  pre-commit install

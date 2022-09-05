@@ -10,6 +10,13 @@ FEATURES = {
     'dropoff_community_area': 32.0
 }
 
+# Note: Container must be locally running.
+# Either from the local build or the actual build on ECR (either in localstack or in real AWS ECR)
+# Example of running locally from already existing AWS ECR image:
+# docker run -it -p 8080:8080 546106488772.dkr.ecr.eu-west-1.amazonaws.com/stg-chicago-taxi:latest
+# from local image:
+# docer run -it -p 8080:8080 chicago-taxi:latest
+
 URL = "http://localhost:8080/2015-03-31/functions/function/invocations"
 
 # Note that aws lambda requires the result in the body of the http response
