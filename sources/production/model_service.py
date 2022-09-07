@@ -13,7 +13,7 @@ class ModelService:
 
     def preprocess_features(self, data: dict):
 
-        # The data in dataset already has 'id' unique.
+        # The data in dataset already has 'id' unique
         # If not the data is may be added with:
         # data['id'] = data.apply(lambda x: str(uuid.uuid4()), axis = 1).
         return data
