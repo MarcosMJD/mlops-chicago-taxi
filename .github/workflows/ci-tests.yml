@@ -68,4 +68,4 @@ jobs:
         id: plan
         working-directory: "infrastructure"
         run: |
-          terraform init -backend-config="key=chicago-taxi-prod.tfstate" --reconfigure && terraform plan --var-file vars/prod.tfvars
+          terraform init -backend-config="key=chicago-taxi-prod.tfstate" --reconfigure && terraform plan --var-file prod.tfvars
