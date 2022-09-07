@@ -43,7 +43,9 @@ def test_lambda_handler(expected_result=EXPECTED_PREDICTION):
     print(test_directory / '../data/http_request.json')
     print(os.path.exists(test_directory))
     print(os.path.exists(test_directory / '../data/http_request.json'))
-    event = json.loads(read_text(test_directory / '../data/http_request.json'))
+    #event = json.loads(read_text(test_directory / '../data/http_request.json'))
+    event = json.loads(read_text('http_request.json'))
+
     expected_result = {
        'statusCode': 200,
         'body': json.dumps(EXPECTED_PREDICTION),
