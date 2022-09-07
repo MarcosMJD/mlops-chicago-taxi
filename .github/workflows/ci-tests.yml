@@ -1,0 +1,47 @@
+name: CI Tests
+on:
+  pull_request:
+    branches:
+      - 'develop'
+    paths:
+      - 'sources/**'
+env:
+  AWS_DEFAULT_REGION: 'eu-west-1'
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+# actions/checkaout@v2 checkaouts the repo and also installs docker on de VM
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      # If no working directory is set, then the absolute paths shall be provided,
+      # from the root directoy of the repo, where .github folder is present
+      - name: Install depependencies
+        working-directory: "sources"
+        run: pip install pipenv && pipenv install --dev
+
+      # Alternatively, pipenv run python -m pytest tests/unit_tests
+
+#      - name: Run Unit Tests
+#        working-directory: "sources"
+#        run: . run.sh
+#
+#      - name: Configure AWS Credentials
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+#          aws-default-region: ${{ env.AWS_DEFAULT_REGION }}
+#
+#      - name: Integration Test
+#        working-directory: "sources"
+#        run: . run.sh

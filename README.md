@@ -1,5 +1,12 @@
 # mlops-taxi-prediction
 
+
+## Requirements
+aws account with permissions to create infrastructure
+github account with aws secrets
+
+
+
 prefect config set PREFECT_API_URL="http://<external-ip>:8080/api" Maybe can be done programmatically?
 export MLFLOW_TRACKING_URI="http://54.74.157.93:8080"
 
@@ -104,6 +111,26 @@ aws lambda update-function-configuration --function-name ${LAMBDA_FUNCTION} --en
 
 ## Pre-commit
 
-Create a default precommit hoock:
+Create a default precommit hook:
   pre-commit sample-config > .pre-commit-config.yaml
   pre-commit install
+  git add .pre-commit-config.yaml
+
+Pytest only adds to sys.path directories where test files are, so you need to add the sources directory with:
+export PYTHONPATH=. fro sources directory
+
+You alternatively can run (not checked)
+python -m pytest
+
+## Docker-compose
+Stop services only
+docker-compose stop
+
+Stop and remove containers, networks..
+docker-compose down
+
+Down and remove volumes
+docker-compose down --volumes
+
+Down and remove images
+docker-compose down --rmi <all|local>

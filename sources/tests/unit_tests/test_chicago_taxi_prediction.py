@@ -3,14 +3,8 @@ from pathlib import Path
 from deepdiff import DeepDiff
 import json
 
-# Add these paths so that modules can be imported
-# This script must be executed in the tests directory
-
-sys.path.append("../../")
-sys.path.append("../production")
-
-from sources.production.chicago_taxi_prediction import lambda_handler
-from sources.production.model_service import ModelService
+from production.chicago_taxi_prediction import lambda_handler
+from production.model_service import ModelService
 
 FEATURES = {
     'id': 'abcd',
@@ -38,7 +32,7 @@ class DummyModel:
         self.version = version
 
     def predict(self, features: dict):
-        
+
         prediction = features['pickup_community_area'] + features['dropoff_community_area']
         return [prediction]
 
@@ -65,5 +59,5 @@ if __name__ == "__main__":
     model = DummyModel()
 
     actual_prediction = test_lambda_handler()
-    
+
     print(actual_prediction)

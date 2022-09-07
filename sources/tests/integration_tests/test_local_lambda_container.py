@@ -15,7 +15,7 @@ FEATURES = {
 # Example of running locally from already existing AWS ECR image:
 # docker run -it -p 8080:8080 546106488772.dkr.ecr.eu-west-1.amazonaws.com/stg-chicago-taxi:latest
 # from local image:
-# docer run -it -p 8080:8080 chicago-taxi:latest
+# docker run -it -p 8080:8080 chicago-taxi:latest
 
 URL = "http://localhost:8080/2015-03-31/functions/function/invocations"
 

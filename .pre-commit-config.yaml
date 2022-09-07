@@ -8,3 +8,44 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-yaml
     -   id: check-added-large-files
+#
+#- repo: https://github.com/pycqa/isort
+#  rev: 5.10.1
+#  hooks:
+#    - id: isort
+#      name: isort (python)
+#- repo: https://github.com/psf/black
+#  rev: 22.6.0
+#  hooks:
+#    - id: black
+#      language_version: python3.9
+#- repo: local
+#  hooks:
+#    - id: pylint
+#      name: pylint
+#      entry: pylint
+#      language: system
+#      types: [python]
+#      args: [
+#        "-rn", # Only display messages
+#        "-sn", # Don't display the score
+#        "--recursive=y"
+#      ]
+
+# We do not call pytest directly
+# We set entry to the run.sh script that changes the directory to
+# sources and also exports PYTHONPATH=.
+# so that modules are found correctly.
+# https://stackoverflow.com/questions/66174906/pre-commit-not-finding-python-packages
+# If we use entry pytest, the working directory is the one where git repo exists
+# and modules will not be found
+
+- repo: local
+  hooks:
+    - id: pytest-check
+      name: pytest-check
+      entry: "./sources/tests/unit_tests/run.sh"
+      language: system
+      types: [python]
+      pass_filenames: false
+      always_run: true

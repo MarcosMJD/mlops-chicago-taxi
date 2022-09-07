@@ -2,13 +2,7 @@ import sys
 from pathlib import Path
 from deepdiff import DeepDiff
 
-# Add these paths so that modules can be importerd 
-# This script must be executed in the tests directory
-
-sys.path.append("../../")
-sys.path.append("../production")
-
-from sources.production.model_service import ModelService
+from production.model_service import ModelService
 
 FEATURES = {
     'id': 'abcd',
@@ -33,12 +27,12 @@ class DummyModel:
         self.version = version
 
     def predict(self, features: dict):
-        
+
         prediction = features['pickup_community_area'] + features['dropoff_community_area']
         return [prediction]
 
 def test_model_service(features=FEATURES, expected_result=EXPECTED_RESULT):
-  
+
     model = DummyModel()
     model_service = ModelService(model, None)
     actual_prediction = model_service.lambda_handler(features)
@@ -55,5 +49,5 @@ def test_model_service(features=FEATURES, expected_result=EXPECTED_RESULT):
 if __name__ == "__main__":
 
     actual_prediction = test_model_service(FEATURES)
-    
+
     print(actual_prediction)
