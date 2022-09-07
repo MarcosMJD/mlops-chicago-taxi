@@ -15,7 +15,7 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
-  profile = "default"
+  # profile = "default"
 }
 
 data "aws_caller_identity" "current_identity" {}
