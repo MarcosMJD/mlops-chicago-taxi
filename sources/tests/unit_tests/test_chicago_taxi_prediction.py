@@ -38,13 +38,10 @@ class DummyModel:
         return [prediction]
 
 def test_lambda_handler(expected_result=EXPECTED_PREDICTION):
+    # Ensure we read from the right path, since this script may run from different path
+    # specially with github actions
     test_directory = Path(__file__).parent
-    print(test_directory)
-    print(test_directory / '../test_data/http_request.json')
-    print(os.path.exists(test_directory))
-    print(os.path.exists(test_directory / '../test_data/http_request.json'))
     event = json.loads(read_text(test_directory / '../test_data/http_request.json'))
-    #event = json.loads(read_text('http_request.json'))
 
     expected_result = {
        'statusCode': 200,
@@ -67,4 +64,4 @@ if __name__ == "__main__":
 
     actual_prediction = test_lambda_handler()
 
-    print(actual_prediction)
+    #print(actual_prediction)

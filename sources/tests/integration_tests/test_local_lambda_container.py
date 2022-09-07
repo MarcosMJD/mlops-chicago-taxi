@@ -35,7 +35,9 @@ def read_text(file):
 
 def test_local_lambda_container(expected_result=EXPECTED_PREDICTION):
 
-    event = json.loads(read_text('../test_data/http_request.json'))
+    test_directory = Path(__file__).parent
+    event = json.loads(read_text(test_directory / '../test_data/http_request.json'))
+
     expected_result = {
        'statusCode': 200,
         'body': json.dumps(EXPECTED_PREDICTION),
