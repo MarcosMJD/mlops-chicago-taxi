@@ -29,11 +29,10 @@ jobs:
         working-directory: "sources"
         run: pip install pipenv && pipenv install --dev
 
-      # Alternatively, pipenv run python -m pytest tests/unit_tests
 
-#      - name: Run Unit Tests
-#        working-directory: "sources"
-#        run: . run.sh
+      - name: Run Unit Tests
+        working-directory: "sources"
+        run: . run.sh
 #
 #      - name: Configure AWS Credentials
 #        uses: aws-actions/configure-aws-credentials@v1
