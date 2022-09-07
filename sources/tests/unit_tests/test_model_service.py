@@ -42,8 +42,8 @@ def test_model_service(features=FEATURES, expected_result=EXPECTED_RESULT):
     assert 'type_changes' not in diff
     assert 'values_changed' not in diff
 
-    print(diff)
-    print(actual_prediction)
+    # print(diff)
+    # print(actual_prediction)
     return actual_prediction
 
 if __name__ == "__main__":
