@@ -200,3 +200,34 @@ module "api_gateway" {
   api_gateway_stage_name = "api_gateway_stage-${var.project_id_hyphens}"
   lambda_function_invoke_arn = module.lambda.lambda_function_invoke_arn
 }
+
+# CI/CD
+
+output "lambda_function_name" {
+  value = "${var.lambda_function_name}-${var.project_id_hyphens}"
+}
+
+output "model_bucket_name" {
+  value = module.bucket.name
+}
+
+output "api_gateway_base_url" {
+  description = "Base URL for API Gateway stage."
+  value = module.api_gateway.api_gateway_base_url
+}
+
+output "mlflow_external_ip" {
+  value = module.ec2_mlflow.external_ip
+}
+
+output "prefect_external_ip" {
+  value = module.ec2_prefect.external_ip
+}
+
+output "ecr_repo_name" {
+  value = "${var.ecr_repo_name}-${var.project_id_hyphens}"
+}
+
+output "ecr_image_uri" {
+  value = module.ecr.image_uri
+}

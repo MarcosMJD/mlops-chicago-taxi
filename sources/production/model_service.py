@@ -15,7 +15,7 @@ class ModelService:
 
         # The data in dataset already has 'id' unique.
         # If not the data is may be added with:
-        # data['id'] = data.apply(lambda x: str(uuid.uuid4()), axis = 1)
+        # data['id'] = data.apply(lambda x: str(uuid.uuid4()), axis = 1).
         return data
 
     def predict(self, features: dict):

@@ -1,0 +1,51 @@
+name: CD-Deploy
+on:
+  push:
+    branches:
+      - 'develop'
+    paths:
+      - 'sources/**'
+
+env:
+  AWS_DEFAULT_REGION: 'eu-west-1'
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      # Define/Create the infrastructure
+      - name: TF plan
+        id: tf-plan
+        working-directory: "infrastructure"
+        run: |
+          terraform init -backend-config="key=chicago-taxi-prod.tfstate" --reconfigure && terraform plan --var-file prod.tfvars
+
+      - name: TF apply
+        id: tf-apply
+        working-directory: "infrastructure"
+        if: ${{ steps.tf-plan.outcome }} == 'success'
+        run: |
+          terraform apply -auto-approve --var-file prod.tfvars
+          echo "::set-output name=api_gateway_base_url::$(terraform output api_gateway_base_url | xargs)"
+          echo "::set-output name=lambda_function_name::$(terraform output lambda_function_name | xargs)"
+          echo "::set-output name=model_bucket_name::$(terraform output model_bucket_name | xargs)"
+          echo "::set-output name=mlflow_external_ip::$(terraform output mlflow_external_ip | xargs)"
+          echo "::set-output name=prefect_external_ip::$(terraform output prefect_external_ip | xargs)"
+          echo "::set-output name=ecr_repo_name::$(terraform output ecr_repo_name | xargs)"
+          echo "::set-output name=ecr_image_uri::$(terraform output ecr_image_uri | xargs)"

@@ -35,7 +35,7 @@ repos:
 # We do not call pytest directly
 # We set entry to the run.sh script that changes the directory to
 # sources and also exports PYTHONPATH=.
-# so that modules are found correctly.
+# so that packages are found correctly.
 # https://stackoverflow.com/questions/66174906/pre-commit-not-finding-python-packages
 # If we use entry pytest, the working directory is the one where git repo exists
 # and modules will not be found
