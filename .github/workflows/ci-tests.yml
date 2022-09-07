@@ -32,7 +32,7 @@ jobs:
 
       - name: Run Unit Tests
         working-directory: "sources"
-        run: ./run.sh
+        run: ./tests/unit_tests/run.sh
 #
 #      - name: Configure AWS Credentials
 #        uses: aws-actions/configure-aws-credentials@v1
