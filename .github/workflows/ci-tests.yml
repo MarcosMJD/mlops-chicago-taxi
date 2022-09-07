@@ -12,7 +12,7 @@ env:
 
 # actions/checkaout@v2 checkaouts the repo and also installs docker on de VM
 jobs:
-  test:
+  tests:
     runs-on: ubuntu-latest
     steps:
 
@@ -39,8 +39,13 @@ jobs:
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws--region: ${{ env.AWS_DEFAULT_REGION }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
       - name: Integration Test
         working-directory: "sources"
         run: ./tests/integration_tests/run.sh
+
+  tp-platform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
