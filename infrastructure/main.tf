@@ -15,6 +15,7 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+  # github actions will fail if profile = "default" is set
   # profile = "default"
 }
 
