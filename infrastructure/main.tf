@@ -7,7 +7,7 @@ terraform {
   required_version = ">= 1.0"
   backend "s3" {
     bucket  = "chicago-taxi-tfstate-mmjd"
-    key     = "chicago-taxi.tfstate"
+    key     = "chicago-taxi-stg.tfstate"
     region  = "eu-west-1"
     encrypt = true
   }
@@ -141,7 +141,7 @@ module "ec2_mlflow" {
 # Prefect Server
 # Run prefect in Docker since installation requires sqlite version which is not included in AWS instance
 # To analyse, use Postgres instead of sqlite
-# Because of an issue wirh CORS when running Prefect in a Docker contanier on AWS EC2, it is needed to 
+# Because of an issue wirh CORS when running Prefect in a Docker contanier on AWS EC2, it is needed to
 # pass the external api uri to prefect. So we use ec2-metadata to get the value.
 
 locals{
@@ -199,4 +199,3 @@ module "api_gateway" {
   api_gateway_stage_name = "api_gateway_stage-${var.project_id_hyphens}"
   lambda_function_invoke_arn = module.lambda.lambda_function_invoke_arn
 }
-

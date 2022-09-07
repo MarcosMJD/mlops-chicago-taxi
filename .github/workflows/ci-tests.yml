@@ -48,4 +48,24 @@ jobs:
   tp-platform:
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - uses: hashicorp/setup-terraform@v2
+
+      # In this test we set on the fly the backend tfstate file to be the one for the prod environment
+      # since we are testing this pull request on the development branch that will occasionally be merged on the
+      # main branch
+      # --reconfigure will not delete the previous tfstate file (i.w. stg one)
+      - name: TF plan
+        id: plan
+        working-directory: "infrastructure"
+        run: |
+          terraform init -backend-config="key=chicago-taxi-prod.tfstate" --reconfigure && terraform plan --var-file vars/prod.tfvars
