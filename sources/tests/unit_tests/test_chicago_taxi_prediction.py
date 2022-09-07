@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 from deepdiff import DeepDiff
 import json
+import os
 
 from production.chicago_taxi_prediction import lambda_handler
 from production.model_service import ModelService
@@ -37,8 +38,11 @@ class DummyModel:
         return [prediction]
 
 def test_lambda_handler(expected_result=EXPECTED_PREDICTION):
+    # Ensure we read from the right path, since this script may run from different path
+    # specially with github actions
+    test_directory = Path(__file__).parent
+    event = json.loads(read_text(test_directory / '../test_data/http_request.json'))
 
-    event = json.loads(read_text('../data/http_request.json'))
     expected_result = {
        'statusCode': 200,
         'body': json.dumps(EXPECTED_PREDICTION),
@@ -60,4 +64,4 @@ if __name__ == "__main__":
 
     actual_prediction = test_lambda_handler()
 
-    print(actual_prediction)
+    #print(actual_prediction)

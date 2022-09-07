@@ -4,7 +4,7 @@ import mlflow
 
 
 class ModelService:
-# Class that manages the model and processes prediction requests
+# Class that manages the model and processes prediction requests.
 
     def __init__(self, model:str, callbacks:List=None):
 

@@ -28,6 +28,7 @@ ToDo
 - Check no cache when using pipenv in Dockerfile
 - Improve paths in the tests. Use current python script file to import other modules,
   Similar to .sh files.
+- Check why aws config initialization fails when github actions if profile default is set in main.tf
 - In dev system... maybe script:
   - Set mlflow env var for the server
   - Set prefect to use prefect server api
