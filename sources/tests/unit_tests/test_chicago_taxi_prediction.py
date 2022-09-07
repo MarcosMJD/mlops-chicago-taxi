@@ -37,8 +37,8 @@ class DummyModel:
         return [prediction]
 
 def test_lambda_handler(expected_result=EXPECTED_PREDICTION):
-
-    event = json.loads(read_text('../data/http_request.json'))
+    test_directory = Path(__file__).parent
+    event = json.loads(read_text(test_directory / '../data/http_request.json'))
     expected_result = {
        'statusCode': 200,
         'body': json.dumps(EXPECTED_PREDICTION),
