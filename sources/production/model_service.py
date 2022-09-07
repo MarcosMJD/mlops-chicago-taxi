@@ -1,7 +1,10 @@
+
 from typing import List
 import mlflow
 
+
 class ModelService:
+# Class that manages the model and processes prediction requests
 
     def __init__(self, model:str, callbacks:List=None):
 
@@ -55,4 +58,3 @@ def init_model_local(model_location: str):
 
     model = mlflow.pyfunc.load_model(model_location)
     return load_model(model)
-
