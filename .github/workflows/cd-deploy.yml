@@ -41,7 +41,7 @@ jobs:
         working-directory: "infrastructure"
         if: ${{ steps.tf-plan.outcome }} == 'success'
         run: |
-          terraform apply -auto-approve --var-file prod.tfvars
+          terraform apply -auto-approve --var-file stg.tfvars
           echo "::set-output name=api_gateway_base_url::$(terraform output api_gateway_base_url | xargs)"
           echo "::set-output name=lambda_function_name::$(terraform output lambda_function_name | xargs)"
           echo "::set-output name=model_bucket_name::$(terraform output model_bucket_name | xargs)"
