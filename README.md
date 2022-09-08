@@ -1,5 +1,22 @@
 # mlops-taxi-prediction
 
+This project consists on the development, deployment and monitoring of machine learning models following the best MLOps practices:
+- Experiment tracking
+- Model registry
+- Workflow orchestration
+- Containerization
+- Cloud computing
+- Model monitoring
+- Continuous integration, continuous deployment and continuous training
+- Software engineering practices
+- Infrastructure as Code
+
+The dataset used is somehow basic (since the important matter here is MLOps): the Chicago Taxi trips dataset to predict the trip duration. https://data.cityofchicago.org/Transportation/Taxi-Trips/wrvz-psew
+
+The dataset is not available as files, so it is needed to access the api and requests the data, which is a more flexible way. In this project I have limited the amount of data for each month, since the accuracy of the models in so important.
+
+The goal is to implement a maturity level between 3 and 4 according to Microsoft (https://docs.microsoft.com/es-es/azure/architecture/example-scenario/mlops/mlops-maturity-model). In future projects, I will incorporate Data Version Controlling and Feature Storage.
+
 ## Requirements in the developer machine
 
 - Python 3.9 (recommend to install Anaconda)
@@ -55,6 +72,9 @@ Then clone the forked repo
 
 Build staging infrastructure
 
+Edit stg.tfvars and modify the variable s3_bucket_name_suffix
+This variable is used to create the name of the S3 bucket, so suffix will avoid conflicts with existing buckets in your aws zone
+
 Edit main.tf file in infrastructure directory and modify
   backend "s3" {
     bucket  = "chicago-taxi-tfstate-mmjd" <- Use your own bucket name
@@ -90,13 +110,14 @@ This last step is needed because .git folder is not cloned and pre-commits live 
 ## Setup accesses in dev environment
 
 From the Terraform output, get the outputs and run:
+Please, fill the fields accordingly
 
-prefect config set PREFECT_API_URL="http://<external-ip>:8080/api"
-export MLFLOW_TRACKING_URI="http://<external-ip>:8080"
+prefect config set PREFECT_API_URL="http://<prefect_external_ip>:8080/api"
+export MLFLOW_TRACKING_URI="http://<mlflow_external_ip>:8080"
 export PROJECT_NAME="chigaco_taxi"
 export PROJECT_ID_HYPHENS="chicago-taxi"
-export BUCKET_NAME="<s3-bucket-name>"
-<s3-bucket-name> is the one made by Terraform in the IaC stage
+export BUCKET_NAME="<bucket_name>"
+export API_GATEWAY_BASE_URL="<api_gateway_base_url>
 
 ## ML project cifecycle
 

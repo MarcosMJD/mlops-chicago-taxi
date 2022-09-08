@@ -77,14 +77,17 @@ jobs:
         env:
           MODEL_BUCKET: ${{ steps.tf-apply.outputs.bucket_name }}
         run: |
-          export RUN_ID=$(aws s3api list-objects-v2 --bucket ${MODEL_BUCKET} \
+          export EXPERIMENT_ID=$(aws s3api list-objects-v2 --bucket ${MODEL_BUCKET} \
           --query 'sort_by(Contents, &LastModified)[-1].Key' --output=text | cut -f2 -d/)
+          echo "::set-output name=experiment_id::${EXPERIMENT_ID}"
+          export RUN_ID=$(aws s3api list-objects-v2 --bucket ${MODEL_BUCKET} \
+          --query 'sort_by(Contents, &LastModified)[-1].Key' --output=text | cut -f3 -d/)
           echo "::set-output name=run_id::${RUN_ID}"
 
       - name: Update Lambda
         env:
           LAMBDA_FUNCTION: ${{ steps.tf-apply.outputs.lambda_function_name}}
-          EXPERIMENT_ID: "1"
+          EXPERIMENT_ID: ${{ steps.get-model-artifacts.outputs.experiment_id}}
           BUCKET_FOLDER: "mlflow"
           MODEL_BUCKET: ${{ steps.tf-apply.outputs.bucket_name }}
           RUN_ID: ${{ steps.get-model-artifacts.outputs.run_id}}
