@@ -87,7 +87,7 @@ git add .pre-commit-config.yaml
 
 This last step is needed because .git folder is not cloned and pre-commits live there
 
-## Access to servers
+## Setup accesses in dev environment
 
 From the Terraform output, get the outputs and run:
 
@@ -167,6 +167,7 @@ Go To Actions, CD-Deploy shall be executing
 
 
 
+
 ### Monitoring
 
 ## Continue
@@ -188,35 +189,27 @@ Use mlflow model registry to get stg model
 
 
 ## ToDo
-- Pass parameters to prefect deployment
-- Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again
+- Pass parameters to prefect flows/deployment
+- Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again.
+- For some reason, CD sees that user_data in EC2s change and reconstructs them
 - Check outputs of the models during trainning, check debug of sample 25. Some of them are [] and some not?
 - Manage passwords (e.g. database) in aws
   - mlflow https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
-- Make user_data persistent, so that after reboot the ec2, it still works
+- Make user_data in EC2 persistent, so that after reboot the ec2, it still works
 - Check lib versions in pipfiles
-- Use logging in prefect
 - Use S3 to store datasets
 - Check no cache when using pipenv in Dockerfile
-- Improve paths in the tests. Use current python script file to import other modules,
-  Similar to .sh files.
 - Check why aws config initialization fails when github actions if profile default is set in main.tf
-- Deployment en Makefile?
+- Modify model and preprocessor to use pipeline or model
+- ¿Deployment en Makefile?
 - Test localstack aws gateway + ECR + lambda + S3
 - In dev system... maybe script:
   - Set mlflow env var for the server
   - Set prefect to use prefect server api
-  - Modify model and preprocessor to use pipeline or model
-  - ignore files in prefect
-  - Unit test lambda is loading S3 model actually. Find a way to avoid this.
+  - More ignore files in prefect
 
 Bugs
  - Nothing
-
-
-
-
-
 
 
 ## Usefull commands and snippets
