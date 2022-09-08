@@ -112,29 +112,30 @@ http://<external-ip>:8080
 
 ### ML pipeline
 
-Trainning Pipeline: manual
+Trainning Pipeline: manual execution
 
 Go to sources/development and run
 python trainning_pipeline.py
 Check your flow run in prefect server url
 http://<external-ip>:8080
 
-Deploy trainning pipeline
+Trainning pipeline: deployment/schedulling
 
 Run:
+In the sources/development directory, run
 python prefect_deployment.py
 
 Go to Prefect server url and check the deployment, block and queue
 
-Run trainning pipeline by agent
-
-To start the agent, run:
+Run trainning pipeline by agent. To start the agent, run:
 prefect agent start chicago-taxi
 
 To launch the run of the deployment, on another shell execute:
 In sources directory, run pipenv shell
 Run prefect config set PREFECT_API_URL="http://<external-ip>:8080/api"
 run prefect deployment run main-flow/chicago-taxi-deployment
+
+Check that the Agent executes the flow
 
 ### Model Deployment
 
@@ -159,6 +160,10 @@ Go to Actions
 Check CD test sucessfully passed
 
 CD
+Go to Pull requests
+Click on Merge pull request
+Click on Confirm Merge
+Go To Actions, CD-Deploy shall be executing
 
 
 
@@ -185,8 +190,7 @@ Use mlflow model registry to get stg model
 ## ToDo
 - Pass parameters to prefect deployment
 - Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again
-
-- Use pipelines or save dv as an artifact
+- Check outputs of the models during trainning, check debug of sample 25. Some of them are [] and some not?
 - Manage passwords (e.g. database) in aws
   - mlflow https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
 - Make user_data persistent, so that after reboot the ec2, it still works

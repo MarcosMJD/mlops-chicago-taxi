@@ -90,7 +90,7 @@ jobs:
           RUN_ID: ${{ steps.get-model-artifacts.outputs.run_id}}
 
         run: |
-          variables = "{ \
+          variables="{ \
             MLFLOW_MODEL_LOCATION="s3", \
             MLFLOW_EXPERIMENT_ID=$EXPERIMENT_ID, \
             MLFLOW_RUN_ID=$RUN_ID, \
