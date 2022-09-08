@@ -29,7 +29,7 @@ class DummyModel:
     def predict(self, features: dict):
 
         prediction = features['pickup_community_area'] + features['dropoff_community_area']
-        return [prediction]
+        return [float(prediction)]
 
 def test_model_service(features=FEATURES, expected_result=EXPECTED_RESULT):
 

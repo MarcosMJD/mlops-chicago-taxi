@@ -18,7 +18,7 @@ FEATURES = {
 # constant as a string, so we need all decimals to check
 EXPECTED_PREDICTION = {
     'id': 'abcd',
-    'prediction': 23.872523122771923
+    'prediction': 40.0
 }
 
 def read_text(file):

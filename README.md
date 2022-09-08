@@ -112,14 +112,25 @@ Use CI/CD to deploy new model. E.g. changing the run_id
 ### Monitoring
 
 ## Continue
-Set env vars to lambda so that CI/CD is used
+Set model env vars to lambda in CI/CD
+- Prefect Agent
+- Monitoring
+- Quality checks
 
-
+## Notes
+Since we use tag latest and the same image name and same ECR,
+by simply terraform apply will make and push de image, but not update
+lambda. Because lambda parameters does not change.
+In CD, we build and push the image, but not update the lambda image.
+What we do is update the function configuration with the environment vars to
+update the model.
+To update lambda image, we need to use update-function-code --image-uri
 Use mlflow model registry to get stg model
-If no model, then use dummy model
-Or... ff no experiment/run_id in mlflow, then create and use a dummy model
+  Check how to do also in CD.
+
 
 ## ToDo
+- Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again
 
 - Use pipelines or save dv as an artifact
 - Manage passwords (e.g. database) in aws
@@ -133,6 +144,7 @@ Or... ff no experiment/run_id in mlflow, then create and use a dummy model
   Similar to .sh files.
 - Check why aws config initialization fails when github actions if profile default is set in main.tf
 - Deployment en Makefile?
+- Test localstack aws gateway + ECR + lambda + S3
 - In dev system... maybe script:
   - Set mlflow env var for the server
   - Set prefect to use prefect server api
@@ -141,13 +153,11 @@ Or... ff no experiment/run_id in mlflow, then create and use a dummy model
   - Unit test lambda is loading S3 model actually. Find a way to avoid this.
 
 Bugs
+ - Nothing
 
-Continue
 
-- Quality checks
-- Test localstack aws gateway + ECR + lambda + S3
-- CD
-- ?
+
+
 
 
 

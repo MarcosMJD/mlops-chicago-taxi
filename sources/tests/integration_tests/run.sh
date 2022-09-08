@@ -25,7 +25,7 @@ else
   echo "no need to build image ${LOCAL_IMAGE_NAME}"
 fi
 
-export LOCAL_MODEL_LOCATION="./tests/model"
+export LOCAL_MODEL_LOCATION="./model"
 
 docker-compose --project-directory ./tests/integration_tests up -d
 

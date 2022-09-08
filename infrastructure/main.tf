@@ -69,16 +69,18 @@ module "sg_db" {
   egress_rules = ["all-all"]
 }
 
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-  lower   = true
-  upper   = false
-}
+# resource "random_string" "suffix" {
+#   length  = 8
+#   special = false
+#   lower   = true
+#   upper   = false
+# }
 
 # Project bucket
+# ${random_string.suffix.result}"
+
 locals {
-    s3_bucket_name  = "${var.s3_bucket_name}-${var.project_id_hyphens}-${random_string.suffix.result}"
+    s3_bucket_name  = "${var.s3_bucket_name}-${var.project_id_hyphens}-${var.s3_bucket_name_suffix}"
 }
 
 module "bucket" {
@@ -183,6 +185,15 @@ module "ecr" {
   account_id = local.account_id
 }
 
+locals {
+  lambda_env_vars = {
+    MLFLOW_BUCKET_NAME = local.s3_bucket_name,
+    MLFLOW_BUCKET_FOLDER = "mlflow",
+    MLFLOW_EXPERIMENT_ID = var.experiment_id,
+    MLFLOW_RUN_ID = var.run_id
+    MLFLOW_MODEL_LOCATION = var.model_location
+  }
+}
 module "lambda" {
   source = "./lambda"
   lambda_function_name = "${var.lambda_function_name}-${var.project_id_hyphens}"
@@ -192,6 +203,7 @@ module "lambda" {
   lambda_iam_s3_role_policy_name = "lambda_s3_iam_policy-${var.project_id}"
   lambda_s3_bucket_name = local.s3_bucket_name
   source_arn_api_gateway = module.api_gateway.api_gateway_execution_arn
+  lambda_env_vars = local.lambda_env_vars
 }
 
 module "api_gateway" {

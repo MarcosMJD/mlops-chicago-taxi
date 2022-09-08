@@ -1,9 +1,13 @@
 variable "lambda_function_name" {
-  description = "Name of the lambda function"  
+  description = "Name of the lambda function"
 }
 
 variable "image_uri" {
   description = "URI of the image for the lambda function"
+}
+
+variable "lambda_env_vars" {
+  description = "Env vars to be passed to lambda function on creation"
 }
 
 variable "lambda_iam_role_name" {

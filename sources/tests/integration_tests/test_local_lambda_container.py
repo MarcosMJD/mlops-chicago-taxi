@@ -54,6 +54,8 @@ def test_local_lambda_container(expected_result=EXPECTED_PREDICTION):
     assert 'type_changes' not in diff
     assert 'values_changed' not in diff
 
+    print(actual_prediction)
+
     return actual_prediction
 
 if __name__ == "__main__":

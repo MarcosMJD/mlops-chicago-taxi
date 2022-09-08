@@ -9,7 +9,11 @@ resource "aws_lambda_function" "lambda" {
   tracing_config {
     mode = "Active"
   }
-  
+
+  environment {
+    variables = var.lambda_env_vars
+  }
+
   timeout = 180
 }
 
@@ -17,16 +21,15 @@ resource "aws_cloudwatch_log_group" "lambda" {
 
   name = "/aws/lambda/${aws_lambda_function.lambda.function_name}"
   retention_in_days = 30
-  
+
 }
 
 output "lambda_function_name" {
   description = "Name of the Lambda function."
-  value = aws_lambda_function.lambda.function_name  
+  value = aws_lambda_function.lambda.function_name
 }
 
 output "lambda_function_invoke_arn" {
   description = "value"
   value = aws_lambda_function.lambda.invoke_arn
 }
-

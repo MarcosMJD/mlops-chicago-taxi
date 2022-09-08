@@ -49,3 +49,54 @@ jobs:
           echo "::set-output name=prefect_external_ip::$(terraform output prefect_external_ip | xargs)"
           echo "::set-output name=ecr_repo_name::$(terraform output ecr_repo_name | xargs)"
           echo "::set-output name=ecr_image_uri::$(terraform output ecr_image_uri | xargs)"
+
+      # Build
+      # amazon-ecr-login uses the credentials from the env
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag and push image to ECR
+        id: build-push-image
+        working-directory: "sources/production"
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ steps.tf-apply.outputs.ecr_repo_name }}
+          IMAGE_TAG: "latest" # ${{ github.sha }}
+        run: |
+          docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} .
+          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+          echo "::set-output name=ecr_image_uri::${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+      # Deploy
+        # Get model location with a hack, get the latest model in the S3 bucket
+        # Alternative to do: get model from Mlflow registry server
+      - name: Get model artifacts
+        id: get-model-artifacts
+        working-directory: "sources/production"
+        env:
+          MODEL_BUCKET: ${{ steps.tf-apply.outputs.model_bucket_name }}
+        run: |
+          export RUN_ID=$(aws s3api list-objects-v2 --bucket ${MODEL_BUCKET} \
+          --query 'sort_by(Contents, &LastModified)[-1].Key' --output=text | cut -f2 -d/)
+          echo "::set-output name=run_id::${RUN_ID}"
+
+      - name: Update Lambda
+        env:
+          LAMBDA_FUNCTION: ${{ steps.tf-apply.outputs.lambda_function_name}}
+          EXPERIMENT_ID: "1"
+          BUCKET_FOLDER: "mlflow"
+          MODEL_BUCKET: ${{ steps.tf-apply.outputs.model_bucket_name }}
+          RUN_ID: ${{ steps.get-model-artifacts.outputs.run_id}}
+
+        run: |
+          variables = "{ \
+            MLFLOW_MODEL_LOCATION="s3", \
+            MLFLOW_EXPERIMENT_ID=$EXPERIMENT_ID, \
+            MLFLOW_RUN_ID=$RUN_ID, \
+            MLFLOW_BUCKET_NAME=$MODEL_BUCKET, \
+            MLFLOW_BUCKET_FOLDER=$BUCKET_FOLDER,
+          }"
+
+          aws lambda update-function-configuration --function-name $LAMBDA_FUNCTION \
+          --environment "Variables=$variables"

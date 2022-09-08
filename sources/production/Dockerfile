@@ -11,6 +11,7 @@ COPY ["Pipfile", "Pipfile.lock", "./"]
 # You can tell Pipenv to install a Pipfile’s contents into its parent system with the --system flag:
 RUN pipenv install --system --deploy
 
-COPY ["chicago_taxi_prediction.py", "model_service.py", "./"]
+# Set the same project folder structure so that packages are imported correctly
+COPY ["chicago_taxi_prediction.py", "model_service.py", "./production/"]
 
-CMD ["chicago_taxi_prediction.lambda_handler"]
+CMD ["production.chicago_taxi_prediction.lambda_handler"]
