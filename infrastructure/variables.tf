@@ -17,6 +17,10 @@ variable "s3_bucket_name" {
   description = "Name of the S3 bucket for the project"
 }
 
+variable "s3_bucket_name_suffix" {
+  description = "Suffix to be added to the bucket to avoid conflicts"
+}
+
 variable "rds_indentifier" {
   description = "Name of the rds instance"
   default     = "postgres"
@@ -59,10 +63,22 @@ variable "docker_image_local_path" {
 }
 
 variable "lambda_function_name" {
-  description = "Name of the lambda function"  
+  description = "Name of the lambda function"
 }
 
 variable "api_gateway_name" {
-  description = "Name of the api gateway"    
+  description = "Name of the api gateway"
 }
 
+variable "experiment_id" {
+  description = "Experiment used in the path of s3 bucket to find the model"
+}
+
+variable "run_id" {
+  description = "Run id used in the path of s3 bucket to find the model"
+}
+
+variable "model_location" {
+  description = "Define where the model is located. '' means a dummy model, a path means a local path, 's3' means s3, in this case run_id and experiment_id shall be provided"
+  default = ""
+}

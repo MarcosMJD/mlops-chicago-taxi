@@ -2,11 +2,20 @@
 from typing import List
 import mlflow
 
+class DummyModel:
+
+    def __init__(self, version: str = '1.0'):
+        self.version = version
+
+    def predict(self, features: dict):
+
+        prediction = features['pickup_community_area'] + features['dropoff_community_area']
+        return [float(prediction)]
 
 class ModelService:
 # Class that manages the model and processes prediction requests
 
-    def __init__(self, model:str, callbacks:List=None):
+    def __init__(self, model, callbacks:List=None):
 
         self.model = model
         self.callbacks = callbacks or []
@@ -58,3 +67,6 @@ def init_model_local(model_location: str):
 
     model = mlflow.pyfunc.load_model(model_location)
     return load_model(model)
+
+def init_dummy_model():
+    return load_model(DummyModel())
