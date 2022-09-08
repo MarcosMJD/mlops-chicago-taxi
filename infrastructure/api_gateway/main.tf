@@ -47,7 +47,7 @@ resource "aws_apigatewayv2_integration" "api_gateway_lambda_integration" {
 resource "aws_apigatewayv2_route" "lambda_hello" {
 
   api_id = aws_apigatewayv2_api.api_gateway_lambda.id
-  route_key = "POST /hello"
+  route_key = "POST /predict"
   target    = "integrations/${aws_apigatewayv2_integration.api_gateway_lambda_integration.id}"
 }
 
@@ -62,7 +62,3 @@ output "api_gateway_base_url" {
   description = "Base URL for API Gateway stage."
   value = aws_apigatewayv2_stage.api_gateway_lambda_stage.invoke_url
 }
-
-
-
-

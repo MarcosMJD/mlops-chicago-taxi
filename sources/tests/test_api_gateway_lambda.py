@@ -9,7 +9,8 @@ curl -X POST -H "Content-Type: application/json" \
 
 if __name__ == "__main__":
 
-    URL = "https://b0csjriwce.execute-api.eu-west-1.amazonaws.com/api_gateway_stage-chicago-taxi/hello"
+    gateway_url = os.getenv("API_GATEWAY_BASE_URL", "https://b0csjriwce.execute-api.eu-west-1.amazonaws.com/api_gateway_stage-chicago-taxi")
+    URL = f"{gateway_url}/predict"
     data = {
         'id': 33,
         'pickup_community_area': 8.0,
