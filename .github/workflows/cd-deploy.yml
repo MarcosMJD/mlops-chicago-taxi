@@ -44,7 +44,7 @@ jobs:
           terraform apply -auto-approve --var-file stg.tfvars
           echo "::set-output name=api_gateway_base_url::$(terraform output api_gateway_base_url | xargs)"
           echo "::set-output name=lambda_function_name::$(terraform output lambda_function_name | xargs)"
-          echo "::set-output name=model_bucket_name::$(terraform output model_bucket_name | xargs)"
+          echo "::set-output name=bucket_name::$(terraform output bucket_name | xargs)"
           echo "::set-output name=mlflow_external_ip::$(terraform output mlflow_external_ip | xargs)"
           echo "::set-output name=prefect_external_ip::$(terraform output prefect_external_ip | xargs)"
           echo "::set-output name=ecr_repo_name::$(terraform output ecr_repo_name | xargs)"
@@ -75,7 +75,7 @@ jobs:
         id: get-model-artifacts
         working-directory: "sources/production"
         env:
-          MODEL_BUCKET: ${{ steps.tf-apply.outputs.model_bucket_name }}
+          MODEL_BUCKET: ${{ steps.tf-apply.outputs.bucket_name }}
         run: |
           export RUN_ID=$(aws s3api list-objects-v2 --bucket ${MODEL_BUCKET} \
           --query 'sort_by(Contents, &LastModified)[-1].Key' --output=text | cut -f2 -d/)
@@ -86,7 +86,7 @@ jobs:
           LAMBDA_FUNCTION: ${{ steps.tf-apply.outputs.lambda_function_name}}
           EXPERIMENT_ID: "1"
           BUCKET_FOLDER: "mlflow"
-          MODEL_BUCKET: ${{ steps.tf-apply.outputs.model_bucket_name }}
+          MODEL_BUCKET: ${{ steps.tf-apply.outputs.bucket_name }}
           RUN_ID: ${{ steps.get-model-artifacts.outputs.run_id}}
 
         run: |

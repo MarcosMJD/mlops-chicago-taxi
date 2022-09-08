@@ -65,8 +65,10 @@ Required: Use Big Bash in this step
 cd infrastructure
 ./terraform.exe init
 terraform plan --var-file=stg.tfvars
-terraform apply
+terraform apply --var-file=stg.tfvars
 yes
+
+Keep the outputs for later
 
 ### Dependencies
 
@@ -87,27 +89,78 @@ This last step is needed because .git folder is not cloned and pre-commits live 
 
 ## Access to servers
 
-From the Terraform output, get the ips of the servers and run:
+From the Terraform output, get the outputs and run:
 
 prefect config set PREFECT_API_URL="http://<external-ip>:8080/api"
 export MLFLOW_TRACKING_URI="http://<external-ip>:8080"
+export PROJECT_NAME="chigaco_taxi"
+export PROJECT_ID_HYPHENS="chicago-taxi"
+export BUCKET_NAME="<s3-bucket-name>"
+<s3-bucket-name> is the one made by Terraform in the IaC stage
 
 ## ML project cifecycle
 
 ### Developing
-Use jupyter notebook to evaluate models
-Trainning
-Experiment tracking
-Model registry
+
+Go to sources/development directory and run
+Jupyter notebook
+Go to your browser, load model_development.ipynb
+And execute the notebook
+
+Check your experiments and models in the mlflow server url
+http://<external-ip>:8080
 
 ### ML pipeline
-Run trainning_pipeline.py to evaluate models
-Trainning
-Experiment tracking
-Model registry
 
-### Deployment
-Use CI/CD to deploy new model. E.g. changing the run_id
+Trainning Pipeline: manual
+
+Go to sources/development and run
+python trainning_pipeline.py
+Check your flow run in prefect server url
+http://<external-ip>:8080
+
+Deploy trainning pipeline
+
+Run:
+python prefect_deployment.py
+
+Go to Prefect server url and check the deployment, block and queue
+
+Run trainning pipeline by agent
+
+To start the agent, run:
+prefect agent start chicago-taxi
+
+To launch the run of the deployment, on another shell execute:
+In sources directory, run pipenv shell
+Run prefect config set PREFECT_API_URL="http://<external-ip>:8080/api"
+run prefect deployment run main-flow/chicago-taxi-deployment
+
+### Model Deployment
+
+Use CI/CD to deploy new server/model.
+
+CI
+
+E.g. <new-branch> = "Feature1"
+git checkout -b ＜new-branch＞ develop
+Modify any file in the sources directory
+git add -A
+git commit -m 'test ci/cd'
+git push
+go to github.com to your forked repo and
+go to Pull requests
+Click on New pull request
+Select base:develop
+Compare: <new-branch>
+Click Create pull request
+Click Create pull request
+Go to Actions
+Check CD test sucessfully passed
+
+CD
+
+
 
 ### Monitoring
 
@@ -130,11 +183,12 @@ Use mlflow model registry to get stg model
 
 
 ## ToDo
+- Pass parameters to prefect deployment
 - Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again
 
 - Use pipelines or save dv as an artifact
 - Manage passwords (e.g. database) in aws
-  - mlflo https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
+  - mlflow https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
 - Make user_data persistent, so that after reboot the ec2, it still works
 - Check lib versions in pipfiles
 - Use logging in prefect

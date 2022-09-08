@@ -219,7 +219,7 @@ output "lambda_function_name" {
   value = "${var.lambda_function_name}-${var.project_id_hyphens}"
 }
 
-output "model_bucket_name" {
+output "bucket_name" {
   value = module.bucket.name
 }
 
@@ -242,4 +242,8 @@ output "ecr_repo_name" {
 
 output "ecr_image_uri" {
   value = module.ecr.image_uri
+}
+
+output "project_id_hyphens" {
+  value = var.project_id_hyphens
 }

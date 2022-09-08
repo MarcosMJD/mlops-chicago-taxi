@@ -2,6 +2,7 @@ from preprocessor import Preprocessor
 from model import Model
 import downloader
 import json
+from pathlib import Path
 
 from datetime import datetime
 
@@ -20,7 +21,7 @@ from hyperopt.pyll import scope
 import mlflow
 import os
 
-from prefect import flow, task
+from prefect import flow, task, get_run_logger
 
 def train_xgboost_search(X_train, X_val, y_val):
 
@@ -92,7 +93,7 @@ def preprocess_datasets(
         CATEGORICAL_FEATURES,
         dv,
         False)
-    return X_train, X_train_dicts, y_train, X_val, X_val_dicts, y_val, X_test, X_test_dicts, y_test, dv, 
+    return X_train, X_train_dicts, y_train, X_val, X_val_dicts, y_val, X_test, X_test_dicts, y_test, dv,
 
 @task
 def train_models(X_train, X_train_dicts, y_train, X_val, X_val_dicts, y_val, TRAIN_PATHFILE, VAL_PATHFILE):
@@ -134,8 +135,8 @@ def train_models(X_train, X_train_dicts, y_train, X_val, X_val_dicts, y_val, TRA
 @task
 def register_models(tracking_uri: str, mlflow_experiment_name: str, mlflow_model_name: str):
 
-    client = mlflow.tracking.MlflowClient(tracking_uri=tracking_uri) 
-    
+    client = mlflow.tracking.MlflowClient(tracking_uri=tracking_uri)
+
     experiment_id = client.get_experiment_by_name(mlflow_experiment_name).experiment_id
 
     client.list_experiments()
@@ -168,7 +169,7 @@ def register_models(tracking_uri: str, mlflow_experiment_name: str, mlflow_model
     latest_versions = client.get_latest_versions(name=mlflow_model_name)
     for version in latest_versions:
         print(f"Version: {version.version}, stage: {version.current_stage}")
-    
+
     return
 
 @flow
@@ -185,25 +186,34 @@ def main_flow(
     VAL_PATHFILE = f"{data_path}/{VAL_SET_NAME}"
     TEST_PATHFILE = f"{data_path}/{TEST_SET_NAME}"
 
+    PROJECT_NAME = os.getenv("PROJECT_NAME") or "chicago_taxi"
     MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI") or "http://52.213.112.212:8080"
-    MLFLOW_EXPERIMENT_NAME = os.getenv("PROJECT_NAME") or "chigaco_taxi"
-    MLFLOW_MODEL_NAME = MLFLOW_EXPERIMENT_NAME+"_regressor"
+    MLFLOW_EXPERIMENT_NAME = "mlflow/" + PROJECT_NAME
+    MLFLOW_MODEL_NAME = PROJECT_NAME +"_regressor"
 
     # Setup MLflow
 
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     # Use a subfolder in the S3 bucket
-    mlflow.set_experiment(f"mlflow/{MLFLOW_EXPERIMENT_NAME}")
+    mlflow.set_experiment(f"{MLFLOW_EXPERIMENT_NAME}")
     mlflow.sklearn.autolog()
 
     # We create a subfolder to store the data files. Note that with running a prefect agent, we
     # have to ensure that the files are stored locally (to the agent).
     # For instance, in windows, the flow is executed in a temp folder, not in the folder where the
     # agent is started.
+    logger = get_run_logger()
 
+    # current_path = Path(__file__).parent
+    # logger.info(f"Current path: {current_path}")
+
+    # logger.info(f"Download path: {TRAIN_PATHFILE}")
     if not os.path.exists(data_path):
+
+        logger.info(f"Path {data_path} does not exist, creating...")
         os.makedirs(data_path)
-    
+
+
     # Download datasets
     print(f'Downloading train set: {TRAIN_SET_NAME}')
     downloader.download_dataset(datetime(2022,train_month,1),datetime(2022,train_month,2),TRAIN_PATHFILE)
@@ -223,7 +233,7 @@ def main_flow(
 
     # Get the best 3 models and register them
     register_models(MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, MLFLOW_MODEL_NAME)
-  
+
 @flow
 def _main_flow(
     data_path: str = "data",
@@ -242,5 +252,3 @@ if __name__ == "__main__":
     TEST_MONTH = 4
 
     main_flow(DATA_PATH, TRAIN_MONTH, VAL_MONTH, TEST_MONTH)
-
-    
