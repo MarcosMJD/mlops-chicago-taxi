@@ -1,19 +1,13 @@
-import sys
 from pathlib import Path
+
 from deepdiff import DeepDiff
 
 from production.model_service import ModelService
 
-FEATURES = {
-    'id': 'abcd',
-    'pickup_community_area': 8.0,
-    'dropoff_community_area': 32.0
-}
+FEATURES = {'id': 'abcd', 'pickup_community_area': 8.0, 'dropoff_community_area': 32.0}
 
-EXPECTED_RESULT = {
-    'id': 'abcd',
-    'prediction': 40.0
-}
+EXPECTED_RESULT = {'id': 'abcd', 'prediction': 40.0}
+
 
 def read_text(file):
     test_directory = Path(__file__).parent
@@ -21,15 +15,18 @@ def read_text(file):
     with open(test_directory / file, 'rt', encoding='utf-8') as f_in:
         return f_in.read().strip()
 
-class DummyModel:
 
+class DummyModel:
     def __init__(self, version: str = '1.0'):
         self.version = version
 
     def predict(self, features: dict):
 
-        prediction = features['pickup_community_area'] + features['dropoff_community_area']
+        prediction = (
+            features['pickup_community_area'] + features['dropoff_community_area']
+        )
         return [float(prediction)]
+
 
 def test_model_service(features=FEATURES, expected_result=EXPECTED_RESULT):
 
@@ -45,6 +42,7 @@ def test_model_service(features=FEATURES, expected_result=EXPECTED_RESULT):
     # print(diff)
     # print(actual_prediction)
     return actual_prediction
+
 
 if __name__ == "__main__":
 

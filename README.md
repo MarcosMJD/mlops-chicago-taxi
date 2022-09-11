@@ -119,6 +119,11 @@ export PROJECT_ID_HYPHENS="chicago-taxi"
 export BUCKET_NAME="<bucket_name>"
 export API_GATEWAY_BASE_URL="<api_gateway_base_url>
 
+Test the infrastructure.
+In this step, the lambda function loads a dummy model.
+Got to sources/tests directory and run
+python ./test_api_gateway_lambda.py
+
 ## ML project cifecycle
 
 ### Developing
@@ -162,6 +167,8 @@ Check that the Agent executes the flow
 
 Use CI/CD to deploy new server/model.
 
+CD takes the latest model in the bucket and loads it to Lambda:
+
 CI
 
 E.g. <new-branch> = "Feature1"
@@ -181,12 +188,16 @@ Go to Actions
 Check CD test sucessfully passed
 
 CD
+
+
 Go to Pull requests
 Click on Merge pull request
 Click on Confirm Merge
 Go To Actions, CD-Deploy shall be executing
 
-
+After sucessfully finalized, test the new model configuration
+Got to sources/tests directory and run
+python ./test_api_gateway_lambda.py
 
 
 
@@ -201,7 +212,7 @@ Set model env vars to lambda in CI/CD
 ## Notes
 Since we use tag latest and the same image name and same ECR,
 by simply terraform apply will make and push de image, but not update
-lambda. Because lambda parameters does not change.
+lambda. Because lambda parameters do not change.
 In CD, we build and push the image, but not update the lambda image.
 What we do is update the function configuration with the environment vars to
 update the model.
@@ -299,7 +310,7 @@ Create a default precommit hook:
 Pytest only adds to sys.path directories where test files are, so you need to add the sources directory with:
 export PYTHONPATH=. fro sources directory
 
-You alternatively can run (not checked)
+You alternatively can run
 python -m pytest
 
 ## Docker-compose

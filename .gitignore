@@ -1,9 +1,11 @@
+sources/monitoring/evidently_service/datasets/Taxi_Trips_2022_03.parquet
 mlops-zoomcamp-project.code-workspace
 data/
 **/*.pem
 .vscode
 **/.terraform*
 **/*.exe
+**/*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -134,4 +136,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-

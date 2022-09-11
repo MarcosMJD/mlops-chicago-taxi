@@ -1,7 +1,8 @@
-from prefect.filesystems import S3
+import os
+
 from trainning_pipeline import main_flow
 from prefect.deployments import Deployment
-import os
+from prefect.filesystems import S3
 
 if __name__ == "__main__":
 
@@ -17,7 +18,7 @@ if __name__ == "__main__":
         name=f"{PROJECT_NAME}-deployment",
         version=1,
         work_queue_name=f"{PROJECT_NAME}",
-        storage=block
+        storage=block,
     )
 
     deployment.apply()
