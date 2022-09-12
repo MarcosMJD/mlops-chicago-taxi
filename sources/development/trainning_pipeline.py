@@ -132,9 +132,7 @@ def train_models(
 
 
 @task
-def register_models(
-    tracking_uri: str, mlflow_experiment_name: str, mlflow_model_name: str
-):
+def register_models(tracking_uri: str, mlflow_experiment_name: str, mlflow_model_name: str):
 
     client = mlflow.tracking.MlflowClient(tracking_uri=tracking_uri)
 
@@ -191,9 +189,7 @@ def main_flow(
     TEST_PATHFILE = f"{data_path}/{TEST_SET_NAME}"
 
     PROJECT_NAME = os.getenv("PROJECT_NAME") or "chicago_taxi"
-    MLFLOW_TRACKING_URI = (
-        os.getenv("MLFLOW_TRACKING_URI") or "http://52.213.112.212:8080"
-    )
+    MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI") or "http://52.213.112.212:8080"
     MLFLOW_EXPERIMENT_NAME = "mlflow/" + PROJECT_NAME
     MLFLOW_MODEL_NAME = PROJECT_NAME + "_regressor"
 
@@ -225,13 +221,9 @@ def main_flow(
         datetime(2022, train_month, 1), datetime(2022, train_month, 2), TRAIN_PATHFILE
     )
     print(f'Downloading val set: {VAL_SET_NAME}')
-    downloader.download_dataset(
-        datetime(2022, val_month, 1), datetime(2022, val_month, 2), VAL_PATHFILE
-    )
+    downloader.download_dataset(datetime(2022, val_month, 1), datetime(2022, val_month, 2), VAL_PATHFILE)
     print(f'Downloading test set: {TEST_SET_NAME}')
-    downloader.download_dataset(
-        datetime(2022, test_month, 1), datetime(2022, test_month, 2), TEST_PATHFILE
-    )
+    downloader.download_dataset(datetime(2022, test_month, 1), datetime(2022, test_month, 2), TEST_PATHFILE)
 
     # Prepare X and y
     (
@@ -272,7 +264,7 @@ def _main_flow(
 ):
 
     # pylint: disable=unused-argument
-    print("hello")
+    print("hello world")
 
 
 if __name__ == "__main__":

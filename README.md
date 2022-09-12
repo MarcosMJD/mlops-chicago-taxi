@@ -398,6 +398,11 @@ Got to `sources/tests directory` and run:
 
 ## 10. Monitoring
 
+IMORTANT NOTE:
+During the CI/CD phase, for some reason, the mlflow and prefect servers may have been recreated, because Terraform sees that used data has changed, but it has not.
+In this case, monitoring will fail in the last step (prefect deployment run main-flow/chicago-taxi-deployment).
+
+
 In this project, batch monitoring has been implemented by using evidently library from Evidently AI. Data drift and regression performance are implemented.
 A report is created with data drift and regression performance sections.
 Data drift is tested and the trainning pipeline is scheduled if data drift (more than 30% of features with detected data drift) is detected (a prefect agent will take care of the flow execution).
