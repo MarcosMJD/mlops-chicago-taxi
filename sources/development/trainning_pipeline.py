@@ -225,7 +225,7 @@ def main_flow(
     print(f'Downloading test set: {TEST_SET_NAME}')
     downloader.download_dataset(datetime(2022, test_month, 1), datetime(2022, test_month, 2), TEST_PATHFILE)
 
-    # Prepare X and y
+    # Prepare X and y.
     (
         X_train,
         X_train_dicts,
@@ -251,7 +251,7 @@ def main_flow(
         VAL_PATHFILE,
     )
 
-    # Get the best 3 models and register them
+    # Get the best 3 models and register them in the model registry
     register_models(MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, MLFLOW_MODEL_NAME)
 
 
