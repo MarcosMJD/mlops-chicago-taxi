@@ -6,6 +6,9 @@ unit_tests: setup
 	bash ./tests/unit_tests/run.sh
 
 quality_checks:
+	black .
+	isort .
+	pylint --recursive=y ../.
 
 build: quality_checks unit_tests setup
 	docker build -t ${LOCAL_IMAGE_NAME} ./production
@@ -13,5 +16,7 @@ build: quality_checks unit_tests setup
 integration_tests: setup build
 	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash ./tests/integration_tests/run.sh
 
+# The run.sh scripts use pipenv run, so there is no need to activate environment
 setup:
 	pipenv install --dev
+	pipenv run pre-commit install

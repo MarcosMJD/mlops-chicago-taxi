@@ -1,3 +1,4 @@
+# Currently not implemented. Do not run this script
 # Use with terraform plan -var-file="./prod.tfvars"
 # Resource names will be appended with the name of the project
 # s3_bucket_name_suffix will avoid conflicts with existing bucket names

@@ -1,11 +1,12 @@
 from typing import List
+
 import pandas as pd
-from sklearn.feature_extraction import DictVectorizer
 from sklearn.pipeline import make_pipeline
+from sklearn.feature_extraction import DictVectorizer
+
 
 class Model:
-
-    def __init__(self, model:str, params, callbacks:List=[]):
+    def __init__(self, model: str, params, callbacks: List = []):
 
         if params:
             self.model = model(**params)
@@ -17,7 +18,7 @@ class Model:
 
         self.params = params
         self.callbacks = callbacks
-    
+
     def preprocess_features(self, data: pd.DataFrame):
 
         # The data in dataset already has 'id' unique.
@@ -25,12 +26,10 @@ class Model:
         # data['id'] = data.apply(lambda x: str(uuid.uuid4()), axis = 1)
         return data
 
-    
     def fit(self, X_dicts, y):
 
-        self.pipeline.fit(X_dicts,y)
+        self.pipeline.fit(X_dicts, y)
 
-    
     def predict(self, features_dicts):
 
         pred = self.pipeline.predict(features_dicts)
