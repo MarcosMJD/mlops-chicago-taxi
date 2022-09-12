@@ -104,21 +104,21 @@ module "database" {
 # set -e: exit on error. set -x shows debug... show the command and the output
 locals{
   user_data_mlflow_server = trimspace(
-  <<-EOF
-    #!/bin/bash
-    set -ex
-    sudo yum update -y
-    sudo amazon-linux-extras install docker -y
-    sudo service docker start
-    sudo usermod -a -G docker ec2-user
-    sudo curl -L https://github.com/docker/compose/releases/download/v2.9.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    # Add your staff here. E.g.
-    # docker run --name some-nginx -p 8080:80 -v ~:/usr/share/nginx/html:ro -d nginx
-    pip3 install mlflow boto3 psycopg2-binary
-    mlflow server -h 0.0.0.0 -p 8080  --default-artifact-root s3://${local.s3_bucket_name}/mlflow --backend-store-uri postgresql://${var.postgres_db_username}:${var.postgres_db_password}@${module.database.endpoint}/${var.postgres_db_name}
-  EOF
-  )
+<<EOF
+#!/bin/bash
+set -ex
+sudo yum update -y
+sudo amazon-linux-extras install docker -y
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+sudo curl -L https://github.com/docker/compose/releases/download/v2.9.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+# Add your staff here. E.g.
+# docker run --name some-nginx -p 8080:80 -v ~:/usr/share/nginx/html:ro -d nginx
+pip3 install mlflow boto3 psycopg2-binary
+mlflow server -h 0.0.0.0 -p 8080  --default-artifact-root s3://${local.s3_bucket_name}/mlflow --backend-store-uri postgresql://${var.postgres_db_username}:${var.postgres_db_password}@${module.database.endpoint}/${var.postgres_db_name}
+EOF
+)
 }
 module "ec2_mlflow" {
   source = "./ec2_mlflow"
@@ -151,17 +151,17 @@ module "ec2_mlflow" {
 
 locals{
   user_data_prefect_server = trimspace(
-  <<-EOF
-    #!/bin/bash
-    set -ex
-    sudo yum update -y
-    sudo amazon-linux-extras install docker -y
-    sudo service docker start
-    sudo usermod -a -G docker ec2-user
-    export PUBLIC_IP=$(ec2-metadata | sed -n "s/^public-ipv4: //p")
-    docker  run --env PREFECT_ORION_UI_API_URL=http://$PUBLIC_IP:8080/api -p 8080:4200 prefecthq/prefect:2.2-python3.8 prefect orion start --host=0.0.0.0
-  EOF
-  )
+<<-EOF
+#!/bin/bash
+set -ex
+sudo yum update -y
+sudo amazon-linux-extras install docker -y
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+export PUBLIC_IP=$(ec2-metadata | sed -n "s/^public-ipv4: //p")
+docker  run --env PREFECT_ORION_UI_API_URL=http://$PUBLIC_IP:8080/api -p 8080:4200 prefecthq/prefect:2.2-python3.8 prefect orion start --host=0.0.0.0
+EOF
+)
 }
 
 module "ec2_prefect" {
