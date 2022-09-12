@@ -103,7 +103,8 @@ module "database" {
 # MLFlow server
 # set -e: exit on error. set -x shows debug... show the command and the output
 locals{
-  user_data_mlflow_server = <<-EOF
+  user_data_mlflow_server = trimspace(
+  <<-EOF
     #!/bin/bash
     set -ex
     sudo yum update -y
@@ -117,6 +118,7 @@ locals{
     pip3 install mlflow boto3 psycopg2-binary
     mlflow server -h 0.0.0.0 -p 8080  --default-artifact-root s3://${local.s3_bucket_name}/mlflow --backend-store-uri postgresql://${var.postgres_db_username}:${var.postgres_db_password}@${module.database.endpoint}/${var.postgres_db_name}
   EOF
+  )
 }
 module "ec2_mlflow" {
   source = "./ec2_mlflow"
@@ -148,7 +150,8 @@ module "ec2_mlflow" {
 # pass the external api uri to prefect. So we use ec2-metadata to get the value.
 
 locals{
-  user_data_prefect_server = <<-EOF
+  user_data_prefect_server = trimspace(
+  <<-EOF
     #!/bin/bash
     set -ex
     sudo yum update -y
@@ -158,6 +161,7 @@ locals{
     export PUBLIC_IP=$(ec2-metadata | sed -n "s/^public-ipv4: //p")
     docker  run --env PREFECT_ORION_UI_API_URL=http://$PUBLIC_IP:8080/api -p 8080:4200 prefecthq/prefect:2.2-python3.8 prefect orion start --host=0.0.0.0
   EOF
+  )
 }
 
 module "ec2_prefect" {
