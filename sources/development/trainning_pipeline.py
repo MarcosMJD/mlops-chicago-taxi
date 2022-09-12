@@ -251,7 +251,7 @@ def main_flow(
         VAL_PATHFILE,
     )
 
-    # Get the best 3 models and register them
+    # Get the best 3 models and register them in the model registry
     register_models(MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, MLFLOW_MODEL_NAME)
 
 
