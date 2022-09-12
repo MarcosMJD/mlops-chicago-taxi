@@ -6,6 +6,8 @@ data/
 **/.terraform*
 **/*.exe
 **/*.csv
+**/mongo_data/
+**/monitoring/*.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

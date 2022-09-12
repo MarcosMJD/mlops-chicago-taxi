@@ -16,15 +16,17 @@ disable = [
     "pointless-string-statement",
     "fixme",
     "duplicate-code",
-    "ungrouped-imports"
+    "ungrouped-imports",
+    "unspecified-encoding",
+    "line-too-long"
 ]
 
 [tool.black]
-line-length = 88
+line-length = 110
 target-version = ['py39']
 skip-string-normalization = true
 
 [tool.isort]
-line_length = 88
+line_length = 110
 multi_line_output = 3
 length_sort = true
