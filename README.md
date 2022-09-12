@@ -423,7 +423,7 @@ The batch_monitoring script will:
 - Calculates the metrics and generates the report.
 - Triggers the trainning pipeline (i.e. schedules a flow in prefect) if DataDrift is detected (more than 30% of features with detected data drift)
 
-Monitoring exection:
+Monitoring execution:
 
 Note that the prediction service must be up and running
 - Go to `./sources/monitoring`
