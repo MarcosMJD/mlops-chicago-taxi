@@ -225,7 +225,7 @@ def main_flow(
     print(f'Downloading test set: {TEST_SET_NAME}')
     downloader.download_dataset(datetime(2022, test_month, 1), datetime(2022, test_month, 2), TEST_PATHFILE)
 
-    # Prepare X and y
+    # Prepare X and y.
     (
         X_train,
         X_train_dicts,
