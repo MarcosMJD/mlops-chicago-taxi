@@ -23,22 +23,22 @@ The application will be able to predict the duration of a taxi trip in the city 
   - [5.- Infrastructure](#5--infrastructure)
     - [Build staging infrastructure](#build-staging-infrastructure)
     - [Test the infrastructure](#test-the-infrastructure)
-  - [6. ML project cifecycle](#6-ml-project-cifecycle)
-    - [Developing](#developing)
-    - [ML pipeline](#ml-pipeline)
-      - [Trainning Pipeline: manual execution](#trainning-pipeline-manual-execution)
-      - [Trainning pipeline: deployment/schedulling](#trainning-pipeline-deploymentschedulling)
-    - [Model Deployment: Tests and CI](#model-deployment-tests-and-ci)
-    - [Model Deployment: CI and Tests](#model-deployment-ci-and-tests)
-    - [Monitoring](#monitoring)
+  - [6. ML project cifecycle: Developing](#6-ml-project-cifecycle-developing)
+  - [7. ML project cifecycle: ML pipeline](#7-ml-project-cifecycle-ml-pipeline)
+    - [Trainning Pipeline: manual execution](#trainning-pipeline-manual-execution)
+    - [Trainning pipeline: deployment/schedulling](#trainning-pipeline-deploymentschedulling)
+  - [8. ML project cifecycle: Tests and CI](#8-ml-project-cifecycle-tests-and-ci)
+  - [9. ML project cifecycle: CD - Model deployment](#9-ml-project-cifecycle-cd---model-deployment)
+  - [10. Monitoring](#10-monitoring)
   - [Notes](#notes)
-  - [ToDo](#todo)
   - [Usefull commands and snippets](#usefull-commands-and-snippets)
     - [Shell script](#shell-script)
     - [Prefect](#prefect)
   - [aws cli and aws-api](#aws-cli-and-aws-api)
   - [Pre-commit](#pre-commit)
   - [Docker-compose](#docker-compose)
+  - [ToDo](#todo)
+  - [Bugs](#bugs)
 
 ## Dataset
 The dataset used is somehow basic (since the important matter here is MLOps): the Chicago Taxi trips dataset to predict the trip duration. https://data.cityofchicago.org/Transportation/Taxi-Trips/wrvz-psew
@@ -212,9 +212,7 @@ At this point, the lambda function loads a dummy model, since we have not run an
 Go to sources/tests directory and run
 `python ./test_api_gateway_lambda.py`
 
-## 6. ML project cifecycle
-
-### Developing
+## 6. ML project cifecycle: Developing
 
 Data scientist will perform some EDA, feature engineering and train and evaluate some models.
 In this project, this part the performance of the model is not so important, but the process of the generation of the model.This is a regression problem. For the sake of simplicity, the features used are
@@ -232,9 +230,9 @@ During this phase, MLflow is used for experiment tracking. Check your experiment
 `http://<mlflow_external_ip>:8080`
 The best three models are registered in MLflow model registry and the best one in `production` stage
 
-### ML pipeline
+## 7. ML project cifecycle: ML pipeline
 
-From the Jupyter notebook, the following python modules are created:
+From the Jupyter notebook, the following python modules/scripts are created:
 `downloader.py`
 `model.py`: Manages the model (actually sklearn pipeline with DictVectorizer and Model): creates the model, preprocess datasets, fits and predicts.
 `preprocessor.py`: Perform the preprocessing of the datasets
@@ -247,20 +245,20 @@ Basically the pipeline performs the same taks as the jupyter notebook, so MLflow
 
 The trainning pipeline may be executed manually or as part of a Prefect deployment
 
-#### Trainning Pipeline: manual execution
+### Trainning Pipeline: manual execution
 
 Go to `sources/development` and run:
 `python trainning_pipeline.py`
 Check your flow run in prefect server url
 `http://<prefect-external-ip>:8080`
 
-#### Trainning pipeline: deployment/schedulling
+### Trainning pipeline: deployment/schedulling
 
 Make the Prefect deployment:
 
   Go to `sources/development` and run:
   `python prefect_deployment.py`
-  This module will create, in prefect orion server, the storage block (a folder in the S3 bucket), the queue and the deployment itself.
+  This script will create, in prefect orion server, the storage block (a folder in the S3 bucket), the queue and the deployment itself.
 
   Go to Prefect server url and check the deployment, block and queue.
 
@@ -276,11 +274,11 @@ Run trainning pipeline by agent:
 
 Check that the Agent executes the flow.
 
-### Model Deployment: Tests and CI
+## 8. ML project cifecycle: Tests and CI
 
 Model deployment will be part of the CI/CD.
 
-The modules under `production` folder implements the ML prediction server by means of loading the model and make predictions being requested by clients apps through API gateway to Lambda function. In other words, the predictions are made by the Lambda function.
+The modules/scripts under `production` folder implements the ML prediction server by means of loading the model and make predictions being requested by clients apps through API gateway to Lambda function. In other words, the predictions are made by the Lambda function.
 - chicago_taxi_prediction.py:
   - Initializes the ModelService
   - Implements the lambda_handler, that used ModelService
@@ -288,7 +286,7 @@ The modules under `production` folder implements the ML prediction server by mea
   - Loads the model, whether on a local location, S3 or a Dummy model.
   - Makes predictions
 
-The CI will ensure that the code works and its quality by using pre-commit hooks:
+The CI will ensure that this code works and its quality by using pre-commit hooks:
 
 - trailing-whitespace
 - end-of-file-fixer
@@ -319,6 +317,7 @@ Go to `sources`directory and run:
 To run the CI workflow:
 
 The CI workflow definition is in `ci-tests.yml` on `.github/workflows` directory.
+Please, note that CI is set to be run on a pull-request on the `develop` branch.
 It runs unit tests and integration tests and checks that the infrastructure definition is correct with `Terraform plan` command.
 
 Execute/do:
@@ -337,7 +336,7 @@ Execute/do:
 - Go to Actions
 - Check CD test sucessfully passed
 
-### Model Deployment: CI and Tests
+## 9. ML project cifecycle: CD - Model deployment
 
 When the infrastructure is build, the Lambda function is initialized with the default parameters, that means that a dummy model is used. As an example, we will update the lambda function with the model of the last experiment. Better approaches may be used, such as using MLflow model registry.
 
@@ -369,43 +368,49 @@ After sucessfully finalized, test the new model configuration
 Got to `sources/tests directory` and run:
 `python ./test_api_gateway_lambda.py`
 
-### Monitoring
 
+## 10. Monitoring
+
+In this project, batch monitoring has been implemented by using evidently library from Evidently.ai. Data drift and regression performance are implemented.
+A report is created with data drift and regression performance sections.
+Data drift is tested and the trainning pipeline is scheduled if data drift (more than 30% of features with detected data drift) is detected (a prefect agent will take care of the flow execution)
+
+The source code is under the folder `sources\monitoring`
+
+Three elements are needed:
+- send_data.py script
+- Mongo database (lanched from docker-compose)
+- batch_monitoring.py script
+
+The reference dataset is: `Taxi_Trips_2022_03.parquet`, under `reference_data` directory.
+
+To simulate the real case usage of the system, the module `send_data.py` performs some tasks:
+- Reads from a more recent dataset `Taxi_Trips_2022_04.parquet`, iterating row by row, and request predictions by sending requests to the API gateway.
+- Processes and stores the target values in a csv file, together with the id field of rach record of data. In other words, when the customer arrives at the destination, the target value (trip duration) is known.
+- Stores the predictions in the Mongo database.
+
+The batch_monitoring script will:
+- Read the csv file with the target values and add them to each record in the mongo db. id field is used to match the prediction with the target.
+- Reads the reference datasets, processes the target value (trip duratoin) and makes the predictions
+- Fetches the data from the database
+- Calculates the metrics and generates the report.
+- Triggers the trainning pipeline (schedule a flow in prefect) if DataDrift is detected (more than 30% of features with detected data drift)
+
+Monitoring exection
+Note that the prediction service must be up and running
+- Go to `./sources/monitoring`
+- `docker-compose up`
+- `python ./send_data.py` (wait for some predictions to be made)
+- `python ./match_monitoring.py`
+- Data drift shall be detected and a flow scheduled. You can check it in the prefect orion url. If an agent has been launched, the trainning pipeline shall run.
 
 
 ## Notes
+
 Since we use tag latest and the same image name and same ECR, by simply terraform apply will make and push de image, but not update lambda function code (the container itself), because lambda parameters (those parameters used to create the lambda function) do not change.
-In CD, we build and push the image, but not update the lambda image. What we do is update the function configuration with the environment vars to update the model, these are not lambda parameters
-To update lambda image, we need to use update-function-code --image-uri
-
-## ToDo
-- Launch an EC2 machine for developer and configure all the tools automatically
-- Prefect Agent in EC2
-- Use mlflow model registry to get stg model. Check how to do also in CD.
-- Monitoring in real time in EC2
-- Run monitoring in batch mode with prefect deployment - scheduled each month
-- Pass parameters to prefect flows/deployment
-- Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again.
-- For some reason, CD sees that user_data in EC2s change and reconstructs them
-- Check outputs of the models during trainning, check debug of sample 25. Some of them are [] and some not?
-- Manage passwords (e.g. database) in aws
-  - mlflow https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
-- Make user_data in EC2 persistent, so that after reboot the ec2, it still works
-- Check lib versions in pipfiles
-- Use S3 to store datasets
-- Check no cache when using pipenv in Dockerfile
-- Check why aws config initialization fails when github actions if profile default is set in main.tf
-- Modify model and preprocessor to use pipeline or model
-- ¿Deployment en Makefile?
-- Test localstack aws gateway + ECR + lambda + S3
-- In dev system... maybe script:
-  - Set mlflow env var for the server
-  - Set prefect to use prefect server api
-  - More ignore files in prefect
-
-Bugs
- - None known
-
+Check Terraform plan in CI phase. In CI phase, we set the env vars to default.
+In CD, we build and push the image again, but not update the lambda image. What we do is update the function configuration with the environment vars to update the model, these are not lambda parameters
+To update lambda image, we need to use update-function-code --image-uri or do it manually in the console.
 
 ## Usefull commands and snippets
 
@@ -421,6 +426,7 @@ Get last error code
 ERROR_CODE=$?
 
 ### Prefect
+
 o create programmatically an storage block in prefect:
 from prefect.filesystems import S3
 block = S3(bucket_path="chicago-taxi-fc4rdz8d")
@@ -461,7 +467,6 @@ Update lambda env vars
 https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
 aws lambda update-function-configuration --function-name ${LAMBDA_FUNCTION} --environment "Variables=${variables}"
 
-
 ## Pre-commit
 
 Create a default precommit hook:
@@ -487,3 +492,36 @@ docker-compose down --volumes
 
 Down and remove images
 docker-compose down --rmi <all|local>
+
+## ToDo
+
+- Review id vs trip_id in the fields
+- Review the categorial features in examples. Shall be string calculated from integer
+- Launch an EC2 machine for developer and configure all the tools automatically
+- Prefect Agent in EC2
+- Manage the CI part when the image is updated with parameters "", since in CI a dummy model is in use. Well it does not matter since in CD the real model will be used anyway.
+- Use mlflow model registry to get stg model. Check how to do also in CD.
+- Monitoring in real time in EC2
+- Run monitoring in batch mode with prefect deployment - scheduled each month
+- Pass parameters to prefect flows/deployment
+- Fix problems with isort and black figthing each other.
+- Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again.
+- For some reason, CD sees that user_data in EC2s change and reconstructs them
+- Check outputs of the models during trainning, check debug of sample 25. Some of them are [] and some not?
+- Manage passwords (e.g. database) in aws
+  - mlflow https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
+- Make user_data in EC2 persistent, so that after reboot the ec2, it still works
+- Check lib versions in pipfiles
+- Use S3 to store datasets
+- Check no cache when using pipenv in Dockerfile
+- Check why aws config initialization fails when github actions if profile default is set in main.tf
+- Modify model and preprocessor to use pipeline or model
+- ¿Deployment en Makefile?
+- Test localstack aws gateway + ECR + lambda + S3
+- In dev system... maybe script:
+  - Set mlflow env var for the server
+  - Set prefect to use prefect server api
+  - More ignore files in prefect
+
+## Bugs
+ - None known
