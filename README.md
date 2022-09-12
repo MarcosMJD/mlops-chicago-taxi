@@ -66,6 +66,10 @@ The goal is to implement a maturity level between 3 and 4 according to Microsoft
 - Python 3.9 (recommended to install Anaconda: https://www.anaconda.com/)
 - Docker
 - docker-compose
+
+You can follow the instructions in the following video to launch an EC2 instance on AWS and prepare the above tools, between others:
+https://www.youtube.com/watch?v=IXSiYkP23zo&list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK&index=3
+
 - Git (if you are using window: https://gitforwindows.org/)
 - Git Bash (only if you are using windows: https://gitforwindows.org/)
 - Github account with aws secrets set-up in the repository (that one forked by you, see below)
@@ -190,8 +194,8 @@ This variable is used to create the name of the S3 bucket, so suffix will avoid 
   ```
   cd infrastructure
   ./terraform.exe init
-  terraform plan --var-file=stg.tfvars
-  terraform apply --var-file=stg.tfvars
+  ./terraform.exe plan --var-file=stg.tfvars
+  ./terraform.exe apply --var-file=stg.tfvars
   yes
   ```
 
@@ -372,13 +376,14 @@ The definition of the CD workflow is in `cd-deploy.yml`, in `.github/workflows` 
 - Update the Lambda function parameters (i.e. load the model)
 
 During the CD phase, the Lamba function will be updated with the following parameters:
+```
 MLFLOW_MODEL_LOCATION="s3", \
 MLFLOW_EXPERIMENT_ID=$EXPERIMENT_ID, \
 MLFLOW_RUN_ID=$RUN_ID, \
 MLFLOW_BUCKET_NAME=$MODEL_BUCKET, \
 MLFLOW_BUCKET_FOLDER=$BUCKET_FOLDER,
 Where $EXPERIMENT_ID and $RUN_ID are those of the latest experiment, calculated in during the CD execution.
-
+```
 Execute/do:
 
 - Go to Pull requests
@@ -551,4 +556,4 @@ docker-compose down --rmi <all|local>
   - More ignore files in prefect
 
 ## Bugs
- - None known
+ - Yet to be found

@@ -11,8 +11,6 @@ repos:
         args: [
            "--maxkb=2000"
         ]
-
-
 - repo: https://github.com/pycqa/isort
   rev: 5.10.1
   hooks:
