@@ -6,7 +6,7 @@ from prefect.filesystems import S3
 
 if __name__ == "__main__":
 
-    # Use hyphens since it will be used to create AWS S3 buckets.
+    # Use hyphens since it will be used to create AWS S3 buckets
     PROJECT_NAME = os.getenv("PROJECT_ID_HYPHENS") or "chicago-taxi"
     S3_BUCKET = os.getenv("BUCKET_NAME") or "stg-chicago-taxi-mmjd"
 

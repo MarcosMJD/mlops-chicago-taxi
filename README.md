@@ -179,6 +179,11 @@ A serverless solution is used:
 
 ### Build the infrastructure
 
+**Important**
+It turns out that Windows uses CRLF in text files, but Linux uses LF.
+If main.tf has CRLF as the end of line. That will cause the CI/CD workflows to recreate the instances, because CI/CD converts them to LF, and Terraform sees that user_data has changed. To avoid this behavior, config the editor to use LF in main.tf file (i.e. in VS Code, in the status bar, click on CRLF to change to LF) and config git to keep this format with:
+git config --global core.autocrlf false
+
 **In Windows, use Git Bash in this step**
 
 - Go to `infrastructure` directory, edit `stg.tfvars` and modify the variable `s3_bucket_name_suffix`
