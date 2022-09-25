@@ -5,6 +5,8 @@ resource "aws_lambda_function" "lambda" {
   image_uri     = var.image_uri
   package_type  = "Image"
   role          = aws_iam_role.lambda_iam_role.arn
+  memory_size   = 256
+
 
   tracing_config {
     mode = "Active"

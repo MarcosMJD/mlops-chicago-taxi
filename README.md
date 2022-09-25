@@ -33,14 +33,17 @@ The application will be able to predict the duration of a taxi trip in the city 
   - [9. ML project cifecycle: CD - Model deployment](#9-ml-project-cifecycle-cd---model-deployment)
   - [10. Monitoring](#10-monitoring)
   - [Notes](#notes)
+  - [Bugs](#bugs)
+  - [ToDo](#todo)
+  - [Improvements](#improvements)
   - [Useful commands and snippets](#useful-commands-and-snippets)
     - [Shell script](#shell-script)
     - [Prefect](#prefect)
-  - [aws cli and aws-api](#aws-cli-and-aws-api)
-  - [Pre-commit](#pre-commit)
-  - [Docker-compose](#docker-compose)
-  - [ToDo](#todo)
-  - [Bugs](#bugs)
+    - [aws cli and aws-api](#aws-cli-and-aws-api)
+    - [Pre-commit](#pre-commit)
+    - [Docker-compose](#docker-compose)
+    - [Python](#python)
+    - [Jupyter](#jupyter)
 
 ## Dataset
 The dataset used is somehow basic (since the important matter here is MLOps): the Chicago Taxi Trips dataset to predict the trip duration. https://data.cityofchicago.org/Transportation/Taxi-Trips/wrvz-psew
@@ -179,6 +182,14 @@ A serverless solution is used:
 
 ### Build the infrastructure
 
+**Important**
+It turns out that Windows uses CRLF in text files, but Linux uses LF.
+If main.tf has CRLF as the end of line. That will cause the CI/CD workflows to recreate the instances, because CI/CD converts them to LF, and Terraform sees that user_data has changed. To avoid this behavior, config the editor to use LF in main.tf file (i.e. in VS Code, in the status bar, click on CRLF to change to LF) and config git to keep this format with:
+`git config --global core.autocrlf false`
+
+The same happens with the files that triggers the building of the lambda image:
+chicago_taxi_prediction.py, Dockerfile and model_service.py. Use LF in these files as well.
+
 **In Windows, use Git Bash in this step**
 
 - Go to `infrastructure` directory, edit `stg.tfvars` and modify the variable `s3_bucket_name_suffix`
@@ -199,18 +210,15 @@ This variable is used to create the name of the S3 bucket, so suffix will avoid 
   yes
   ```
 
-  Terraform will autmatically create the Lambda image and upload it to ECR (before creating the Lambda function).
+  Terraform will automatically create the Lambda image and upload it to ECR (before creating the Lambda function).
   For the creation of the Lambda image, the files in the `production` folder will be used.
 
-  From the Terraform output, please get the output values and execute the following statements (Please, fill the fields accordingly):
-  ```
-  prefect config set PREFECT_API_URL="http://<prefect_external_ip>:8080/api"
-  export MLFLOW_TRACKING_URI="http://<mlflow_external_ip>:8080"
-  export PROJECT_NAME="chigaco_taxi"
-  export PROJECT_ID_HYPHENS="chicago-taxi"
-  export BUCKET_NAME="<bucket_name>"
-  export API_GATEWAY_BASE_URL="<api_gateway_base_url>
-  ```
+  In order to have terraform output variables exported in the shell to be used later on, please, run the following command:
+  In Bitbash (Windows): `eval $(python.exe export_output.py)`
+  In Linux: `eval $(python export_output.py)`
+
+  Then, configure prefect libraries to be able to conect to the server API with the following command:
+  `prefect config set PREFECT_API_URL="http://<prefect-external-ip>:8080/api"`
 
 ### Test the infrastructure
 
@@ -218,7 +226,7 @@ At this point, the lambda function loads a dummy model, since we have not run an
 Go to sources/tests directory and run
 `python ./test_api_gateway_lambda.py`
 
-It should answer with a prediction of 40.
+It should answer with a prediction of 40 (the sum of pick-up and drop-off location ids 8 and 32 respectively)
 
 ## 6. ML project cifecycle: Developing
 
@@ -444,23 +452,118 @@ Since we use tag latest and the same image name and same ECR, by simply terrafor
 Check Terraform plan in CI phase. In CI phase, we set the env vars to default.
 In CD, we build and push the image again, but not update the lambda image. What we do is update the function configuration with the environment vars to update the model, these are not lambda parameters
 To update lambda image, we need to use update-function-code --image-uri or do it manually in the console.
+Note: In CD, lambda is always relaunched, even if there is no change in the env vars. So latest model is used.
+
+## Bugs
+ -
+
+
+## ToDo
+
+Development
+  - Make a Makefile with the minimum setup.
+    - add the . PYTHONPATH
+  - Check all scripts to be run from ./sources with PYTHONPATH = .
+    - And check where data is stored. Better use a common path under sources dir
+  - Refactor model service in producion and use it in monitor and development.
+  - Make a general Makefile
+    - ¿IaC en Makefile?
+  - Improve the performance of the model (feature engineering)
+  - Modify model and preprocessor to use pipeline or model
+  - Use design patterns
+  - Use parameters in the calls to __main__
+  - Allow model service to process batches of predictions
+
+- Launch an EC2 machine for developer and configure all the tools automatically.
+  - Set mlflow env var for the server
+  - Set prefect to use prefect server api
+
+- Prefect
+  - Use Postgres in Prefect? Prefect recommends SQlite. Postgres only for heavy workloads
+  - More ignore files in prefect
+  - Prefect Agent in EC2 (use Terraform prefect agent)
+    - Check https://docs.prefect.io/concepts/infrastructure/ for different options
+  - Pass parameters to prefect flows/deployment
+
+- Manage the CI part when the image is updated with parameters "", since in CI a dummy model is in use. Well it does not matter since in CD the real model will be used anyway.
+
+- Monitoring
+  - Get the model from mlflow registry
+  - Monitoring in real time in EC2?
+  - Run monitoring in batch mode with prefect deployment - scheduled each month
+  - Check why evidently raises error when batch monitoring and all columns are used. Check empty values?
+
+- Best practices
+  - Fix problems with isort and black figthing each other.
+    - https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html?highlight=imports#isort
+  - Check why aws config initialization fails when github actions if profile default is set in main.tf
+  - Test localstack aws gateway + ECR + lambda + S3
+
+- IaC
+  - Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again.
+  - Manage passwords (e.g. database) in aws
+    - mlflow https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
+  - Make user_data in EC2 persistent, so that after reboot the ec2, it still works
+  - Use S3 to store datasets?
+  - Check no cache when using pipenv in Dockerfile.
+  - If AWS changes amiid, the EC2 instances will be recreated. And then, prefect flows will be deleted. Fix this.
+    - If mlflow is recreated, it will detect a database version change, and will not run. It's needed to run mlflow db upgrade <database_uri> to fix it
+
+- MLflow
+  - Check Mlflow unnable to get signature of models. Actually it happens when using Dictvectorizer in the pipeline. In any case, the models are loaded correctly
+
+## Improvements
+
+  - Streamlit app for as the used interface to send requests. Likely some mapping or similar.
+
 
 ## Useful commands and snippets
 
 ### Shell script
 
 Header of a sh script
-"#!/usr/bin/env bash"
+`#!/usr/bin/env bash`
 
 Returns the directory where the Bash script file is saved
-"$(dirname "$0")"
+`$(dirname "$0")`
 
 Get last error code
-ERROR_CODE=$?
+`ERROR_CODE=$?`
+
+HTTP Post with curl
+```
+curl -X POST -H "Content-Type: application/json" \
+    -d "{'trip_id': 33, 'pickup_community_area': '8.0', 'dropoff_community_area': '32.0'}" \
+    https://8bi0bzeja8.execute-api.eu-west-1.amazonaws.com/api_gateway_stage-chicago-taxi/hello
+```
+
+`bash -c "string"`
+-c string If the -c option is present, then commands are read from string.
+If there are arguments after the string, they are assigned to the positional parameters, starting with $0.
+
+`if [[ -d .git ]]`
+checks if a directory exists
+
+`if [ -x "$(command -v docker)" ]; then`
+The command command returns the docker command's location, then the -x flag tests that it there and able to execute.
+[ -x FILE ]	True if FILE exists and is executable.
+
+`if [[ -z "${GITHUB_ACTIONS}" ]]; then`
+-z: True of the length if "STRING" is zero.
+
+`command1 && command2`
+conditional execution. The second command will only execute if the first command has executed successfully i.e, its exit status is zero.
+
+```
+if [ -d "." ] && [[ ":$PYTHONPATH:" != *":.:"* ]]; then
+    PYTHONPATH="${PYTHONPATH:+"$PYTHONPATH:"}."
+fi
+```
+Add "." to PYTHONPATH if it is not yet
 
 ### Prefect
 
-o create programmatically an storage block in prefect:
+To create programmatically an storage block in prefect:
 from prefect.filesystems import S3
 block = S3(bucket_path="chicago-taxi-fc4rdz8d")
 block.save("example-block")
@@ -480,7 +583,7 @@ prefect agent start -q 'test'
 To run a flow
 prefect deployment run <FLOW_NAME>/<DEPLOYMENT_NAME>
 
-## aws cli and aws-api
+### aws cli and aws-api
 
 Download object from aws s3
 aws s3api get-object --bucket stg-chicago-taxi-fc4rdz8d --key mlflow/2/e4ff37b7254a408c86826fb2a25573a9/artifacts/model/conda.yaml ./conda.yaml
@@ -500,7 +603,7 @@ Update lambda env vars
 https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
 `aws lambda update-function-configuration --function-name ${LAMBDA_FUNCTION} --environment "Variables=${variables}"`
 
-## Pre-commit
+### Pre-commit
 
 Create a default precommit hook:
   pre-commit sample-config > .pre-commit-config.yaml
@@ -513,7 +616,7 @@ export PYTHONPATH=. fro sources directory
 You alternatively can run
 python -m pytest
 
-## Docker-compose
+### Docker-compose
 Stop services only
 docker-compose stop
 
@@ -526,38 +629,68 @@ docker-compose down --volumes
 Down and remove images
 docker-compose down --rmi <all|local>
 
-## ToDo
+### Python
+Execute OS command:
+```
+  command = f"python scripy.py {YEAR} {MONTH}"
+  os.system(command)
+```
 
-- Review id vs trip_id in the fields
-- Calculate the day of the end of the month using timedeltas
-- Review the categorial features in examples. Shall be string calculated from integer
-- Launch an EC2 machine for developer and configure all the tools automatically
-- Check which folder is used in CI workflow (sources? or production?)
-- Prefect Agent in EC2
-- Manage the CI part when the image is updated with parameters "", since in CI a dummy model is in use. Well it does not matter since in CD the real model will be used anyway.
-- Use mlflow model registry to get stg model. Check how to do also in CD.
-- Monitoring in real time in EC2
-- Run monitoring in batch mode with prefect deployment - scheduled each month
-- Pass parameters to prefect flows/deployment
-- Check the list of files that triggers the build of new image in CI
-- Fix problems with isort and black figthing each other.
-- Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again.
-- For some reason, CD sees that user_data in EC2s change and reconstructs them
-- Check outputs of the models during trainning, check debug of sample 25. Some of them are [] and some not?
-- Manage passwords (e.g. database) in aws
-  - mlflow https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
-- Make user_data in EC2 persistent, so that after reboot the ec2, it still works
-- Check lib versions in pipfiles
-- Use S3 to store datasets
-- Check no cache when using pipenv in Dockerfile
-- Check why aws config initialization fails when github actions if profile default is set in main.tf
-- Modify model and preprocessor to use pipeline or model
-- ¿Deployment en Makefile?
-- Test localstack aws gateway + ECR + lambda + S3
-- In dev system... maybe script:
-  - Set mlflow env var for the server
-  - Set prefect to use prefect server api
-  - More ignore files in prefect
+### Jupyter
+Display pandas pretty:
+`from IPython.display import display, HTML`
 
-## Bugs
- - Yet to be found
+
+
+
+
+
+Install git on AWS EC2 Amazon Linux 2
+sudo yum update -y
+sudo yum install git -y
+
+Conda can not create env in AWS EC2 Amazon Linux 2. Permission error.
+Fix: chown -R 500:500 /home/ec2-user/anaconda3
+
+Check ubuntu version
+lsb_release -a
+
+Update linux packages
+sudo apt-get update command is used to download package information from all configured sources
+sudo apt-get upgrade command downloads and installs the updates for each outdated package and dependency on your system
+
+
+
+
+
+Content-Type: multipart/mixed; boundary="//"
+MIME-Version: 1.0
+
+--//
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config.txt"
+
+#cloud-config
+cloud_final_modules:
+- [scripts-user, always]
+
+--//
+Content-Type: text/x-shellscript; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="userdata.txt"
+
+#!/bin/bash
+/bin/echo "Hello World" >> /tmp/testfile.txt
+--//--
+
+
+if [ -x "$(command -v docker)" ]; then
+    echo "Update docker"
+    # command
+else
+    echo "Install docker"
+    # command
+fi

@@ -1,4 +1,3 @@
-sources/monitoring/evidently_service/datasets/Taxi_Trips_2022_03.parquet
 mlops-zoomcamp-project.code-workspace
 data/
 **/*.pem
@@ -7,7 +6,7 @@ data/
 **/*.exe
 **/*.csv
 **/mongo_data/
-**/monitoring/*.html
+**/*.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

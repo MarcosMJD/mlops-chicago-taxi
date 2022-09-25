@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 scikit-learn = "==1.1.2"
-mlflow = "==1.28.0"
+mlflow = "==1.29.0"
 prefect = "==2.2"
 pyarrow = "==9.0.0"
 pandas = "==1.4.4"

@@ -14,6 +14,11 @@ variable "lambda_function_local_path" {
     description = "Local path to lambda function / python file"
 }
 
+variable "model_service_local_path" {
+    type        = string
+    description = "Local path to model_service / python file"
+}
+
 variable "docker_image_local_path" {
     type        = string
     description = "Local path to Dockerfile"

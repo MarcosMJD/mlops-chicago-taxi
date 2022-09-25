@@ -9,13 +9,14 @@ Classes:
 """
 
 from typing import List
-from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import downloader
 from sklearn.feature_extraction import DictVectorizer
+
+from development import downloader
 
 
 class Preprocessor:
@@ -24,12 +25,17 @@ class Preprocessor:
         self.verbose = verbose
         self.analyse = analyse
 
-    def read_dataframe_csv(self, file_path: str, parse_dates: List[str]):
+    def read_dataframe_csv(
+        self,
+        file_path: str,
+        parse_dates: List[str],
+        dtype: dict = {"Pickup Community Area": "str", "Dropoff Community Area": "str"},
+    ):
 
-        df = pd.read_csv(file_path, parse_dates=parse_dates)
-        df.columns = df.columns.str.lower().str.replace(' ', '_')
-        output_file_name = file_path.replace('csv', 'parquet')
-        df.to_parquet(output_file_name, engine='pyarrow', index=None)
+        df = pd.read_csv(file_path, parse_dates=parse_dates, dtype=dtype)
+        df.columns = df.columns.str.lower().str.replace(" ", "_")
+        output_file_name = file_path.replace("csv", "parquet")
+        df.to_parquet(output_file_name, engine="pyarrow", index=None)
 
         return output_file_name
 
@@ -39,38 +45,38 @@ class Preprocessor:
 
     def analyse_dataframe(self, df: pd.DataFrame, target: str = None):
 
-        print('Analysing dataset...')
-        print(f'shape: {df.shape}')
-        print(f'types:\n{df.dtypes}')
+        print("Analysing dataset...")
+        print(f"shape: {df.shape}")
+        print(f"types:\n{df.dtypes}")
         print(df.head().T)
 
-        categorical_columns = list(df.dtypes[df.dtypes == 'object'].index)
-        numerical_columns = list(df.dtypes[df.dtypes != 'object'].index)
+        categorical_columns = list(df.dtypes[df.dtypes == "object"].index)
+        numerical_columns = list(df.dtypes[df.dtypes != "object"].index)
 
         for column in df.columns:
-            print('\n' + column)
+            print("\n" + column)
             if column in categorical_columns:
-                print('Suggested type: categorical')
+                print("Suggested type: categorical")
             else:
-                print('Suggested type: numerical')
+                print("Suggested type: numerical")
             nuniques = df[column].nunique()
             if nuniques < 50:
                 print(column, df[column].unique())
             else:
-                print(f'Number of uniques values is {nuniques}')
+                print(f"Number of uniques values is {nuniques}")
 
-            print(f'Number of nulls: {df[column].isnull().sum()}')
+            print(f"Number of nulls: {df[column].isnull().sum()}")
 
-        sns.displot(df[target], kind='kde')
-        print(f'\ndescription of {target}:')
+        sns.displot(df[target], kind="kde")
+        print(f"\ndescription of {target}:")
         print(
             df[target].describe(
                 percentiles=[0.01, 0.05, 0.1, 0.2, 0.75, 0.95, 0.98, 0.99]
             )
         )
         print(
-            '% of trips within 1-60 min: '
-            f'{((df[target] >= 60) & (df[target] <= 60*60)).mean()*100:.2f}'
+            "% of trips within 1-60 min: "
+            f"{((df[target] >= 60) & (df[target] <= 60*60)).mean()*100:.2f}"
         )
 
         return numerical_columns, categorical_columns
@@ -80,9 +86,9 @@ class Preprocessor:
         df: pd.DataFrame,
         categorical_features: List[str],
         numerical_features: List[str],
-        target: str = '',
     ):
         """
+
         drop records where, trip_start_timestamp, trip_seconds are NaNs
         drops records where trip_seconds < 60 or > 4000
         create duration in minutes as target
@@ -98,21 +104,20 @@ class Preprocessor:
         df = df[df.trip_seconds.notnull()]
         df = df[df.trip_start_timestamp.notnull()]
         df = df[(df.trip_seconds > 60) & (df.trip_seconds < 3600)]
-        df['duration'] = df['trip_seconds'] / 60
+        df["duration"] = df["trip_seconds"] / 60
 
         for column in categorical_features:
             if self.verbose:
                 print(
-                    f'\nFilling {round(df[column].isna().mean()*100,2)}% '
-                    f'of nans with -1 in column: {column}'
+                    f"\nFilling {round(df[column].isna().mean()*100,2)}% "
+                    f"of nans with -1 in column: {column}"
                 )
             df[column].fillna(-1, inplace=True)
             # This will not touch the None values, only the not None types are processed
-            df[column] = df[column].astype('str')
-            df[column] = df[column].str.lower().str.replace(' ', '_')
+            df[column] = df[column].astype("str")
+            df[column] = df[column].str.lower().str.replace(" ", "_")
 
-        if not target:
-            target = ['duration']
+        target = ["duration"]
 
         df.drop(
             df.columns.difference(categorical_features + numerical_features + target),
@@ -121,11 +126,11 @@ class Preprocessor:
         )
 
         if self.verbose:
-            print(f'\nfinal shape: {df.shape}')
-            print(f'\nfinal types:\n{df.dtypes}')
-            print(f'\ncategorical_features: {categorical_features}')
-            print(f'\nnumerical_features: {numerical_features}')
-            print(f'\ntarget: {target}')
+            print(f"\nfinal shape: {df.shape}")
+            print(f"\nfinal types:\n{df.dtypes}")
+            print(f"\ncategorical_features: {categorical_features}")
+            print(f"\nnumerical_features: {numerical_features}")
+            print(f"\ntarget: {target}")
 
         return df[categorical_features + numerical_features], df[target]
 
@@ -136,13 +141,13 @@ class Preprocessor:
         numerical_features: List[str],
     ):
 
-        dicts = df[categorical_features + numerical_features].to_dict(orient='records')
+        dicts = df[categorical_features + numerical_features].to_dict(orient="records")
         return dicts
 
     def prepare_features(
         self,
         dv: DictVectorizer,
-        dict_vectorizer: DictVectorizer,
+        dicts: dict,
         y: np.ndarray,
         fit: bool = True,
     ):
@@ -152,9 +157,9 @@ class Preprocessor:
             fit = True
 
         if fit:
-            X = dv.fit_transform(dict_vectorizer)
+            X = dv.fit_transform(dicts)
         else:
-            X = dv.transform(dict_vectorizer)
+            X = dv.transform(dicts)
 
         return X, y.values, dv
 
@@ -162,13 +167,14 @@ class Preprocessor:
         self,
         csv_file_path: str,
         parse_dates: List[str],
+        dtype: dict,
         target: str,
         categorical_features: List[str],
         dv: DictVectorizer,
         dv_fit: bool = True,
     ):
 
-        file_path = self.read_dataframe_csv(csv_file_path, parse_dates)
+        file_path = self.read_dataframe_csv(csv_file_path, parse_dates, dtype)
         df_raw = self.read_dataframe_parquet(file_path)
 
         if dv is None:
@@ -192,7 +198,8 @@ class Preprocessor:
 
 if __name__ == "__main__":
 
-    DATA_PATH = "../../data/"
+    current_path = Path(__file__).parent
+    DATA_PATH = str(current_path / "data")
 
     TRAIN_MONTH = 2
     VAL_MONTH = 3
@@ -204,25 +211,27 @@ if __name__ == "__main__":
     VAL_PATHFILE = DATA_PATH + VAL_SET_NAME
     TEST_PATHFILE = DATA_PATH + TEST_SET_NAME
 
-    DATE_FIELDS = ['Trip Start Timestamp', 'Trip End Timestamp']
-    CATEGORICAL_FEATURES = ['pickup_community_area', 'dropoff_community_area']
-    TARGET = 'trip_seconds'
+    DATE_FIELDS = ["Trip Start Timestamp", "Trip End Timestamp"]
+    DTYPE = {"Pickup Community Area": str, "Dropoff Community Area": str}
+    CATEGORICAL_FEATURES = ["pickup_community_area", "dropoff_community_area"]
+    TARGET = "trip_seconds"
 
-    print(f'Downloading train set: {TRAIN_SET_NAME}')
-    downloader.download_dataset(
-        datetime(2022, TRAIN_MONTH, 1), datetime(2022, TRAIN_MONTH, 2), TRAIN_PATHFILE
-    )
-    print(f'Downloading val set: {VAL_SET_NAME}')
-    downloader.download_dataset(
-        datetime(2022, VAL_MONTH, 1), datetime(2022, VAL_MONTH, 2), VAL_PATHFILE
-    )
-    print(f'Downloading test set: {TEST_SET_NAME}')
-    downloader.download_dataset(
-        datetime(2022, TEST_MONTH, 1), datetime(2022, TEST_MONTH, 2), TEST_PATHFILE
-    )
+    print(f"Downloading train set: {TRAIN_SET_NAME}")
+    downloader.download_dataset(2022, TRAIN_MONTH, 2, TRAIN_PATHFILE)
+    print(f"Downloading val set: {VAL_SET_NAME}")
+    downloader.download_dataset(2022, VAL_MONTH, 2, VAL_PATHFILE)
+    print(f"Downloading test set: {TEST_SET_NAME}")
+    downloader.download_dataset(2022, TEST_MONTH, 2, TEST_PATHFILE)
 
     preprocessor = Preprocessor(verbose=True, analyse=False)
     dv = DictVectorizer()
+    print(DTYPE)
     X, y, dv, dicts = preprocessor.process(
-        TRAIN_PATHFILE, DATE_FIELDS, TARGET, CATEGORICAL_FEATURES, dv=dv, dv_fit=True
+        csv_file_path=TRAIN_PATHFILE,
+        parse_dates=DATE_FIELDS,
+        dtype=DTYPE,
+        target=TARGET,
+        categorical_features=CATEGORICAL_FEATURES,
+        dv=dv,
+        dv_fit=True,
     )
