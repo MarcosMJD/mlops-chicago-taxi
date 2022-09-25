@@ -21,9 +21,9 @@ class Model:
 
     def preprocess_features(self, data: pd.DataFrame):
 
-        # The data in dataset already has 'id' unique.
+        # The data in dataset already has 'trip_id' unique.
         # If not the data is may be added with:
-        # data['id'] = data.apply(lambda x: str(uuid.uuid4()), axis = 1)
+        # data['trip_id'] = data.apply(lambda x: str(uuid.uuid4()), axis = 1)
         return data
 
     def fit(self, X_dicts, y):

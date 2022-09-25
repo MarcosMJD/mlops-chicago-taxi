@@ -1,5 +1,5 @@
 {
-  "body": "{ \"pickup_community_area\": 8.0, \"dropoff_community_area\": 32.0, \"id\": \"abcd\" }",
+  "body": "{ \"trip_id\": \"2b0bbf69fcaa3815ea9280360c01be4e9642f805\", \"pickup_community_area\": \"8\", \"dropoff_community_area\": \"32\" }",
   "resource": "/{proxy+}",
   "path": "/path/to/resource",
   "httpMethod": "POST",

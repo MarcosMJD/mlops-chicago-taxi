@@ -4,7 +4,7 @@ on:
     branches:
       - 'develop'
     paths:
-      - 'sources/**'
+      - 'sources/production/**'
 
 env:
   AWS_DEFAULT_REGION: 'eu-west-1'
@@ -46,6 +46,7 @@ jobs:
           echo "::set-output name=lambda_function_name::$(terraform output lambda_function_name | xargs)"
           echo "::set-output name=bucket_name::$(terraform output bucket_name | xargs)"
           echo "::set-output name=mlflow_external_ip::$(terraform output mlflow_external_ip | xargs)"
+          echo "::set-output name=mlflow_model_name::$(terraform output mlflow_model_name | xargs)"
           echo "::set-output name=prefect_external_ip::$(terraform output prefect_external_ip | xargs)"
           echo "::set-output name=ecr_repo_name::$(terraform output ecr_repo_name | xargs)"
           echo "::set-output name=ecr_image_uri::$(terraform output ecr_image_uri | xargs)"
@@ -85,21 +86,41 @@ jobs:
           echo "::set-output name=run_id::${RUN_ID}"
 
       - name: Update Lambda
-        env:
-          LAMBDA_FUNCTION: ${{ steps.tf-apply.outputs.lambda_function_name}}
-          EXPERIMENT_ID: ${{ steps.get-model-artifacts.outputs.experiment_id}}
-          BUCKET_FOLDER: "mlflow"
-          MODEL_BUCKET: ${{ steps.tf-apply.outputs.bucket_name }}
-          RUN_ID: ${{ steps.get-model-artifacts.outputs.run_id}}
+      # Option 1: Update lambda with latest model in S3 bucket
+      # env:
+      #   LAMBDA_FUNCTION: ${{ steps.tf-apply.outputs.lambda_function_name}}
+      #   EXPERIMENT_ID: ${{ steps.get-model-artifacts.outputs.experiment_id}}
+      #   BUCKET_FOLDER: "mlflow"
+      #   MODEL_BUCKET: ${{ steps.tf-apply.outputs.bucket_name }}
+      #   RUN_ID: ${{ steps.get-model-artifacts.outputs.run_id}}
 
+      # run: |
+      #   variables="{ \
+      #     MLFLOW_MODEL_LOCATION="s3", \
+      #     MLFLOW_EXPERIMENT_ID=$EXPERIMENT_ID, \
+      #     MLFLOW_RUN_ID=$RUN_ID, \
+      #     MLFLOW_BUCKET_NAME=$MODEL_BUCKET, \
+      #     MLFLOW_BUCKET_FOLDER=$BUCKET_FOLDER,
+      #   }"
+
+      #   aws lambda update-function-configuration --function-name $LAMBDA_FUNCTION \
+      #   --environment "Variables=$variables"
+
+      # Option 2:
+      # Reload lambda function always. With no other parameter than model location pointing to
+      # mlflow server and model state Staging,
+      # so that lambda will load the model in Staging, whatwever the version is
+
+        env:
+          LAMBDA_FUNCTION: ${{steps.tf-apply.outputs.lambda_function_name}}
+          MLFLOW_TRACKING_URI: "http://${{steps.tf-apply.outputs.mlflow_external_ip}}:8080"
+          MLFLOW_MODEL_NAME: ${{steps.tf-apply.outputs.mlflow_model_name}}
         run: |
           variables="{ \
-            MLFLOW_MODEL_LOCATION="s3", \
-            MLFLOW_EXPERIMENT_ID=$EXPERIMENT_ID, \
-            MLFLOW_RUN_ID=$RUN_ID, \
-            MLFLOW_BUCKET_NAME=$MODEL_BUCKET, \
-            MLFLOW_BUCKET_FOLDER=$BUCKET_FOLDER,
+            MLFLOW_MODEL_LOCATION="mlflow", \
+            MLFLOW_MODEL_NAME=$MLFLOW_MODEL_NAME, \
+            MLFLOW_MODEL_STAGE="Staging", \
+            MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI, \
           }"
-
           aws lambda update-function-configuration --function-name $LAMBDA_FUNCTION \
           --environment "Variables=$variables"

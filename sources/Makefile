@@ -5,7 +5,7 @@ LOCAL_IMAGE_NAME:="chicago-taxi:${LOCAL_TAG}"
 unit_tests: setup
 	bash ./tests/unit_tests/run.sh
 
-quality_checks:
+quality_checks: setup
 	black .
 	isort .
 	pylint --recursive=y ../.

@@ -1,4 +1,7 @@
-data/
+**/data/
+Pipfile
+Pipfile.*
+*.ipynb
 
 # prefect artifacts
 .prefectignore

@@ -13,6 +13,7 @@ resource "aws_ecr_repository" "repo" {
 resource null_resource ecr_image {
   triggers = {
     python_file = md5(file(var.lambda_function_local_path))
+    python_file_2 = md5(file(var.model_service_local_path))
     docker_file = md5(file(var.docker_image_local_path))
   }
 
@@ -27,7 +28,6 @@ resource null_resource ecr_image {
       interpreter = ["bash", "-c"]
       working_dir = "../sources/production"
    }
-   
 }
 
 data aws_ecr_image lambda_image {

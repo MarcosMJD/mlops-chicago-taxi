@@ -143,6 +143,10 @@ module "ec2_mlflow" {
   postgres_db_password = var.postgres_db_password
 }
 
+locals {
+  mlflow_tracking_uri = "http://${module.ec2_mlflow.external_ip}:8080"
+}
+
 # Prefect Server
 # Run prefect in Docker since installation requires sqlite version which is not included in AWS instance
 # To analyse, use Postgres instead of sqlite
@@ -184,6 +188,7 @@ module "ecr" {
   ecr_repo_name = "${var.ecr_repo_name}-${var.project_id_hyphens}"
   ecr_image_tag = var.ecr_image_tag
   lambda_function_local_path = var.lambda_function_local_path
+  model_service_local_path = var.model_service_local_path
   docker_image_local_path = var.docker_image_local_path
   region = var.aws_region
   account_id = local.account_id
@@ -191,13 +196,17 @@ module "ecr" {
 
 locals {
   lambda_env_vars = {
+    MLFLOW_MODEL_LOCATION = var.mlflow_model_location,
     MLFLOW_BUCKET_NAME = local.s3_bucket_name,
     MLFLOW_BUCKET_FOLDER = "mlflow",
-    MLFLOW_EXPERIMENT_ID = var.experiment_id,
-    MLFLOW_RUN_ID = var.run_id
-    MLFLOW_MODEL_LOCATION = var.model_location
+    MLFLOW_EXPERIMENT_ID = var.mlflow_experiment_id,
+    MLFLOW_RUN_ID = var.mlflow_run_id,
+    MLFLOW_TRACKING_URI = local.mlflow_tracking_uri,
+    MLFLOW_MODEL_NAME = var.project_id,
+    MLFLOW_MODEL_STAGE = var.mlflow_model_stage
   }
 }
+
 module "lambda" {
   source = "./lambda"
   lambda_function_name = "${var.lambda_function_name}-${var.project_id_hyphens}"
@@ -217,7 +226,7 @@ module "api_gateway" {
   lambda_function_invoke_arn = module.lambda.lambda_function_invoke_arn
 }
 
-# CI/CD
+# Output vars for development and CI/CD
 
 output "lambda_function_name" {
   value = "${var.lambda_function_name}-${var.project_id_hyphens}"
@@ -250,4 +259,16 @@ output "ecr_image_uri" {
 
 output "project_id_hyphens" {
   value = var.project_id_hyphens
+}
+
+output "project_id" {
+  value = var.project_id
+}
+
+output "mlflow_model_name" {
+  value = var.project_id
+}
+
+output "mlflow_tracking_uri" {
+  value = local.mlflow_tracking_uri
 }
