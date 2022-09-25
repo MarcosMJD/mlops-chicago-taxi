@@ -22,11 +22,11 @@ disable = [
 ]
 
 [tool.black]
-line-length = 130
+line-length = 88
 target-version = ['py39']
 skip-string-normalization = true
 
 [tool.isort]
-line_length = 130
+line_length = 88
 multi_line_output = 3
 length_sort = true
