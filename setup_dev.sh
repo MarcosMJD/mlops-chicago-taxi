@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-cd ./infrastructure
+cd ./infrastructure/deployment
 eval $(python.exe export_output.py)
 prefect config set PREFECT_API_URL="http://$PREFECT_EXTERNAL_IP:8080/api"
-cd ..
+cd ../..
 cd sources
 
 CURRENT_PATH="."

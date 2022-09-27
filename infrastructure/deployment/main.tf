@@ -183,6 +183,105 @@ module "ec2_prefect" {
   }
 }
 
+# Development server
+locals{
+  user_data_dev_server = trimspace(
+<<-EOF
+#!/bin/bash
+
+set -aex
+
+# echo -e:  enable interpretation of the following backslash escapes
+
+if ! [ -d ./bin ];
+then
+    echo '\nCreating ~/bin directory\n'
+    mkdir -p bin
+fi
+
+if ! [  -d ./bin/anaconda3 ]; then
+    cd bin
+    echo '\nInstalling anaconda3...\n'
+    echo "Downloading anaconda3..."
+    wget https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh -O ./Anaconda3-2022.05-Linux-x86_64.sh
+    echo "Running anaconda3 script..."
+    # -b run install in batch mode (without manual intervention), it is expected the license terms are agreed upon
+    # -p install prefix, defaults to $PREFIX, must not contain spaces.
+    bash ./Anaconda3-2022.05-Linux-x86_64.sh -b -p ~/bin/anaconda3
+
+    echo "Removing anaconda installation script..."
+    rm ./Anaconda3-2022.05-Linux-x86_64.sh
+
+    #activate conda
+    eval "$(/home/$USER/bin/anaconda3/bin/conda shell.bash hook)"
+
+    echo "Running conda init..."
+    conda init
+    # Using -y flag to auto-approve
+    echo "Running conda update..."
+    conda update -y conda
+
+    cd
+else
+    echo "anaconda already installed."
+fi
+
+echo "\nRunning sudo apt-get update...\n"
+sudo apt-get update
+
+echo "\nInstalling Docker...\n"
+sudo apt-get -y install docker.io
+
+echo "\nInstalling docker-compose...\n"
+cd
+cd bin
+wget https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-linux-x86_64 -O docker-compose
+sudo chmod +x docker-compose
+
+echo "\nInstalling Terraform...\n"
+wget https://releases.hashicorp.com/terraform/1.1.4/terraform_1.1.4_linux_amd64.zip
+sudo apt-get install unzip
+unzip terraform_1.1.4_linux_amd64.zip
+rm terraform_1.1.4_linux_amd64.zip
+
+cd
+
+echo "\nSetup .bashrc...\n"
+
+echo -e '' >> ~/.bashrc
+echo -e 'export PATH=${HOME}/bin:${PATH}' >> ~/.bashrc
+echo -e '' >> ~/.bashrc
+echo -e 'export PYTHONPATH=".:${PYTHONPATH}"' >> ~/.bashrc
+
+echo "\nSetting up Docker without sudo setup...\n"
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+
+EOF
+)
+}
+
+module "ec2_dev" {
+  source = "./ec2_dev"
+  user_data = local.user_data_dev_server
+  key_name = "ec2_key_name_dev-${var.project_id}"
+  ssh_key_filename = "ec2_ssh_key_dev-${var.project_id}.pem"
+  security_groups = [
+    module.sg_web.security_group_id,
+    module.sg_ssh.security_group_id
+  ]
+  tags = {
+    Name = "ec2_server_dev-${var.project_id}"
+    Project = var.project_id
+  }
+  ec2_iam_role_name = "ec2_iam_role_dev-${var.project_id}"
+  ec2_instance_profile_name = "ec2_instance_profile_dev-${var.project_id}"
+  s3_iam_role_policy_name = "s3_iam_role_policy_dev-${var.project_id}"
+  s3_bucket_name = local.s3_bucket_name
+}
+
+
 module "ecr" {
   source = "./ecr"
   ecr_repo_name = "${var.ecr_repo_name}-${var.project_id_hyphens}"
