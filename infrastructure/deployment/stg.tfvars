@@ -4,9 +4,9 @@
 s3_bucket_name =  "stg"
 s3_bucket_name_suffix = "mmjd"
 # Image will be build and push to ECR on every change in the following files
-lambda_function_local_path = "../sources/production/chicago_taxi_prediction.py"
-model_service_local_path = "../sources/production/model_service.py"
-docker_image_local_path = "../sources/production/Dockerfile"
+lambda_function_local_path = "../../sources/production/chicago_taxi_prediction.py"
+model_service_local_path = "../../sources/production/model_service.py"
+docker_image_local_path = "../../sources/production/Dockerfile"
 
 ecr_repo_name = "stg"
 lambda_function_name = "stg"
