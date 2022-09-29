@@ -44,6 +44,9 @@ The application will be able to predict the duration of a taxi trip in the city 
     - [Docker-compose](#docker-compose)
     - [Python](#python)
     - [Jupyter](#jupyter)
+    - [Git](#git)
+    - [AWS EC2](#aws-ec2)
+    - [Linux](#linux)
 
 ## Dataset
 The dataset used is somehow basic (since the important matter here is MLOps): the Chicago Taxi Trips dataset to predict the trip duration. https://data.cityofchicago.org/Transportation/Taxi-Trips/wrvz-psew
@@ -643,28 +646,24 @@ Display pandas pretty:
 `from IPython.display import display, HTML`
 
 
+### Git
+Add x permissions to files:
+git update-index --chmod=+x setup_vm.sh setup_dev_linux.sh setup_dev_windows_gitbash.sh
 
 
-
+### AWS EC2
 
 Install git on AWS EC2 Amazon Linux 2
+```
 sudo yum update -y
 sudo yum install git -y
+```
 
 Conda can not create env in AWS EC2 Amazon Linux 2. Permission error.
 Fix: chown -R 500:500 /home/ec2-user/anaconda3
 
-Check ubuntu version
-lsb_release -a
-
-Update linux packages
-sudo apt-get update command is used to download package information from all configured sources
-sudo apt-get upgrade command downloads and installs the updates for each outdated package and dependency on your system
-
-
-
-
-
+AWS EC2: Execute user_data on reboot
+```
 Content-Type: multipart/mixed; boundary="//"
 MIME-Version: 1.0
 
@@ -696,3 +695,15 @@ else
     echo "Install docker"
     # command
 fi
+```
+
+### Linux
+
+Check ubuntu version
+`lsb_release -a`
+
+Update linux packages
+```
+sudo apt-get update command is used to download package information from all configured sources
+sudo apt-get upgrade command downloads and installs the updates for each outdated package and dependency on your system
+```
