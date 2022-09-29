@@ -508,6 +508,8 @@ Development
   - Check no cache when using pipenv in Dockerfile.
   - If AWS changes amiid, the EC2 instances will be recreated. And then, prefect flows will be deleted. Fix this.
     - If mlflow is recreated, it will detect a database version change, and will not run. It's needed to run mlflow db upgrade <database_uri> to fix it
+  - Setup ingress rules based on current ip address. Plave in stg.tfvars or with https://stackoverflow.com/questions/46763287/i-want-to-identify-the-public-ip-of-the-terraform-execution-environment-and-add
+
 
 - MLflow
   - Check Mlflow unnable to get signature of models. Actually it happens when using Dictvectorizer in the pipeline. In any case, the models are loaded correctly

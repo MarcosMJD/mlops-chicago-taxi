@@ -29,7 +29,7 @@ resource "aws_instance" "ec2_instance" {
 
   root_block_device {
     volume_type = "gp2"
-    volume_size = 16
+    volume_size = var.volume_size
   }
 
   iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.id

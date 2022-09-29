@@ -97,7 +97,7 @@ if __name__ == "__main__":
             response = requests.post(
                 url,
                 headers={"Content-Type": "application/json"},
-                data=json.dumps(record, cls=DateTimeEncoder),
+                data=data,
             ).json()
 
             print(f"prediction: {response['prediction']}")

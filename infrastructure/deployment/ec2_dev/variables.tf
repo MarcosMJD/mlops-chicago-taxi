@@ -13,6 +13,11 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
+variable "volume_size" {
+  description = "volume size"
+  default     = 8
+}
+
 variable "security_groups" {
   description = "List of secirity groups of the instance"
 }

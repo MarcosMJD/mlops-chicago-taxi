@@ -2,6 +2,7 @@ from typing import List
 
 from mlflow import set_tracking_uri
 from mlflow.pyfunc import load_model
+import numpy as np
 
 
 class DummyModel:
@@ -58,6 +59,8 @@ class ModelService:
 
         prediction = input_data.copy()
         pred_value = self.predict(input_data)
+        if isinstance(pred_value, np.ndarray):
+            pred_value = pred_value[0]
         prediction["prediction"] = pred_value
         return prediction
 

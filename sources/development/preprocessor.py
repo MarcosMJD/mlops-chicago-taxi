@@ -113,7 +113,7 @@ class Preprocessor:
                     f"of nans with -1 in column: {column}"
                 )
             df[column].fillna(-1, inplace=True)
-            # This will not touch the None values, only the not None types are processed
+            # astype('str') will not touch the None values, only the not None types are processed
             df[column] = df[column].astype("str")
             df[column] = df[column].str.lower().str.replace(" ", "_")
 

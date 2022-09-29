@@ -26,7 +26,7 @@ resource null_resource ecr_image {
           docker push ${aws_ecr_repository.repo.repository_url}:${var.ecr_image_tag}
       EOT
       interpreter = ["bash", "-c"]
-      working_dir = "../sources/production"
+      working_dir = "../../sources/production"
    }
 }
 
