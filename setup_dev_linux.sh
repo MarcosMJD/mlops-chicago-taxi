@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 cd ./infrastructure/deployment
-eval $(python.exe export_output.py)
+terraform init
+eval $(python export_output.py terraform)
 prefect config set PREFECT_API_URL="http://$PREFECT_EXTERNAL_IP:8080/api"
 cd ../..
 cd sources

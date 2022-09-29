@@ -79,10 +79,7 @@ newgrp docker
 
 # Specific stuff for the project
 
-echo -e "\nCloning repo\n"
-git clone https://github.com/MarcosMJD/mlops-chicago-taxi.git
-
-cd mlops-chicago-taxi
+cd ~/mlops-chicago-taxi
 
 echo -e "\nPreparing environment\n"
 pip install --upgrade pip
@@ -90,3 +87,4 @@ pip install pipenv
 
 cd sources
 pipenv install --dev
+pipenv shell

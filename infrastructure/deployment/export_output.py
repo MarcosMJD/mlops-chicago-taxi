@@ -7,10 +7,12 @@ Use:
 
 import os
 import json
+import sys
 
 if __name__ == "__main__":
 
-    COMMAND = "terraform.exe output --json > output.vars"
+    executable = sys.argv[1]
+    COMMAND = f"{executable} output --json > output.vars"
     os.system(COMMAND)
 
     with open("output.vars", "rt") as f_in:
