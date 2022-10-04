@@ -274,7 +274,7 @@ newgrp docker
 # Specific stuff for the project
 
 echo -e "\nCloning repo\n"
-git clone https://github.com/MarcosMJD/mlops-chicago-taxi.git
+git clone ${var.repo}
 
 cd mlops-chicago-taxi
 

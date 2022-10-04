@@ -278,9 +278,14 @@ Check your flow run in prefect server url
 
 Make the Prefect deployment:
 
-  Go to `sources/development` and run:
-  `python prefect_deployment.py`
-  This script will create, in prefect orion server, the storage block (a folder in the S3 bucket), the queue and the deployment itself.
+  **This does not work in Windows**
+  For some reason, when executing in Windows, in S3 the subfolders (/development/) are not created, but filenames with the name of the directory ('\development\__init__py'). And also the agent will try to get the files from the absolute path where the prefect_deployment.py is present (obviously, the agent will not have this path, since this path is in the developer machine, not in the agent)
+
+  In linux, everything works ok.
+
+  Go to `sources/` and run:
+  `python ./development/prefect_deployment.py`
+  This script will create, in prefect orion server, the storage block (a folder in the S3 bucket), the queue and the deployment itself. And will upload the artifacts to the S3 storage block.
 
   Go to Prefect server url and check the deployment, block and queue.
 
@@ -458,12 +463,13 @@ To update lambda image, we need to use update-function-code --image-uri or do it
 Note: In CD, lambda is always relaunched, even if there is no change in the env vars. So latest model is used.
 
 ## Bugs
- -
+ - setup_dev_windows_gitbash.sh pipenv shell prefect.exe... does not work. So we are executing prefec before pipenv shell. This means that the main environment shall have prefect. In linux, setup_dev_linux, pipenv shell is run with the parameter prefect... So it works.
 
 
 ## ToDo
 
 Development
+  - Add sw version and model version over all stages. To keep track of predictions. i.e. Lambda loads model, and sets model version to prediction as well as the sw version of the lambda function which is passed as a parameter that changes in each commit.
   - Make a Makefile with the minimum setup.
     - add the . PYTHONPATH
   - Check all scripts to be run from ./sources with PYTHONPATH = .

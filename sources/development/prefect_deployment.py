@@ -1,6 +1,6 @@
 import os
 
-from trainning_pipeline import main_flow
+from development.trainning_pipeline import main_flow
 from prefect.deployments import Deployment
 from prefect.filesystems import S3
 

@@ -19,3 +19,7 @@ api_gateway_name = "stg"
 # test
 mlflow_model_location = "mlflow"
 mlflow_model_stage = "Staging"
+
+# development  development vm
+# clone repo into the development vm
+repo = "https://github.com/MarcosMJD/mlops-chicago-taxi.git"

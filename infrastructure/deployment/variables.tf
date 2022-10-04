@@ -98,3 +98,8 @@ variable "mlflow_model_stage" {
   description = "Model stage when loading from mlflow registry server"
   default     = ""
 }
+
+variable "repo" {
+  description = "Url of the repo to clone into the developement vm"
+  default     = ""
+}
