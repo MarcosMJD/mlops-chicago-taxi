@@ -56,10 +56,6 @@ def lambda_handler(event, context):
     # When using AWS_PROXY integration, the full http request is received as the event
     input_data = json.loads(event["body"])
 
-    # Convert to str, since json.loads will use integer/float
-    input_data["pickup_community_area"] = str(input_data["pickup_community_area"])
-    input_data["dropoff_community_area"] = str(input_data["dropoff_community_area"])
-
     # flush=True allows print in docker-compose
     # print(input_data, flush=True)
     prediction = model.lambda_handler(input_data)

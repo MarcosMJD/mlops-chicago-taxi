@@ -29,6 +29,10 @@ data "aws_vpc" "default" {
   default = true
 }
 
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
 module "sg_ssh" {
   source = "terraform-aws-modules/security-group/aws"
 
@@ -36,7 +40,7 @@ module "sg_ssh" {
   description = "Security group for ec2 ssh"
   vpc_id      = data.aws_vpc.default.id
 
-  ingress_cidr_blocks = ["92.187.240.146/32"]
+  ingress_cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
   ingress_rules       = ["ssh-tcp"]
 }
 

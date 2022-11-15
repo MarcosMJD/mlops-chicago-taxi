@@ -13,7 +13,7 @@ lambda_function_name = "stg"
 api_gateway_name = "stg"
 
 # Model
-# We will use a dummy model. Real models will be updated in CI/CD workflow
+# We will use a dummy model. Real models will be updated in CI/CD workflow (actually in CD).
 # mlflow_model_location = ""
 
 # test

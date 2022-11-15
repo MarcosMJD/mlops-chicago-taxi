@@ -8,7 +8,7 @@ from pymongo import MongoClient
 from evidently import ColumnMapping
 from evidently.dashboard import Dashboard
 from evidently.test_suite import TestSuite
-from evidently.test_preset import DataDrift
+from evidently.test_preset import DataDriftTestPreset
 from evidently.model_profile import Profile
 from evidently.dashboard.tabs import DataDriftTab, RegressionPerformanceTab
 from evidently.model_profile.sections import (
@@ -71,11 +71,9 @@ def load_model(tracking_uri: str, name: str, stage: str):
 
 # @task
 def add_prediction_to_ref_data(ref_data, model):
-
-    dicts = ref_data.to_dict(orient="records")
-    print(type(model.model.predict(dicts[0])))
-    print(model.model.predict(dicts[0]))
-    ref_data["prediction"] = model.predict(dicts)
+    # print(type(model.model.predict(dicts[0])))
+    # print(model.model.predict(dicts[0]))
+    ref_data["prediction"] = model.predict(ref_data)
 
 
 # @task
@@ -115,7 +113,7 @@ def run_evidently(ref_data, data):
 
     test_suite_results = TestSuite(
         tests=[
-            DataDrift(),
+            DataDriftTestPreset(),
         ]
     )
 

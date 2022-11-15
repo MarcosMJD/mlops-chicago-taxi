@@ -6,7 +6,7 @@ import requests
 This script does the same as the following command:
 
 curl -X POST -H "Content-Type: application/json" \
-    -d "{'trip_id': 33, 'pickup_community_area': '8.0', 'dropoff_community_area': '32.0'}" \
+    -d "{'trip_id': 33, 'pickup_community_area': '8', 'dropoff_community_area': '32'}" \
     https://8bi0bzeja8.execute-api.eu-west-1.amazonaws.com/api_gateway_stage-chicago-taxi/hello
 """
 
@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     gateway_url = os.getenv(
         "API_GATEWAY_BASE_URL",
-        "https://b0csjriwce.execute-api.eu-west-1.amazonaws.com/api_gateway_stage-chicago-taxi",
+        "https://6hd2cram5f.execute-api.eu-west-1.amazonaws.com/api_gateway_stage-chicago-taxi",
     )
     URL = f"{gateway_url}/predict"
     data = {
@@ -23,7 +23,8 @@ if __name__ == "__main__":
         "dropoff_community_area": "32",
     }
 
-    # .post serializes data
+    # .post serializes json parameter (must be JSON serializable) and send it into the body of the request.
+    #  data parameter (not used here), is similar, but not serializes in JSON format).
     request = requests.post(URL, json=data)
     # .json deserializes the response
     body = request.json()

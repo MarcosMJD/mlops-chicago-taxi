@@ -19,7 +19,7 @@ cd sources
 
 CURRENT_PATH="."
 if [ -d $CURRENT_PATH ] && [[ ":$PYTHONPATH:" != *":$CURRENT_PATH:"* ]]; then
-    PYTHONPATH="${PYTHONPATH:+"$PYTHONPATH:"}$CURRENT_PATH"
+    export PYTHONPATH="${PYTHONPATH:+"$PYTHONPATH:"}$CURRENT_PATH"
 fi
 
 # At this point, we do not have prefect. After pipenv shell, yes we have it

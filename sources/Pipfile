@@ -16,6 +16,7 @@ hyperopt = "==0.2.7"
 s3fs = "==0.4.2"
 pymongo = "==4.2.0"
 evidently = "*"
+protobuf = "==3.20.1"
 
 [dev-packages]
 jupyter = "*"
@@ -27,6 +28,7 @@ pylint = "==2.14.4"
 black = "==22.6.0"
 isort = "==5.10.1"
 pre-commit = "==2.20.0"
+streamlit = "*"
 
 [requires]
 python_version = "3.9"

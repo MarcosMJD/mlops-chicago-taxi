@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Union
 
 from mlflow import set_tracking_uri
 from mlflow.pyfunc import load_model
 import numpy as np
+import pandas as pd
 
 
 class DummyModel:
@@ -39,29 +40,33 @@ class ModelService:
         # The data in dataset already has 'trip_id' unique
         # If not, id may be added with:
         # data['trip_id'] = data.apply(lambda x: str(uuid.uuid4()), axis = 1).
+
+        # Fill Nans with -1
         return data
 
-    def predict(self, features: dict):
+    def predict(self, features: pd.DataFrame):
 
         pred = self.model.predict(features)
         for callback in self.callbacks:
             callback(pred)
-        """
-        if not isinstance(pred,float):
-            pred = pred[0]
-        """
         return pred
 
     def set_model(self, model):
         self.model = model
 
-    def lambda_handler(self, input_data: dict):
-
+    def lambda_handler(self, input_data: Union[List[dict], dict]) -> dict:
+        print(input_data)
+        print(type(input_data))
         prediction = input_data.copy()
-        pred_value = self.predict(input_data)
+        if isinstance(prediction, List):
+            pred_value = self.predict(pd.DataFrame(input_data))
+        else:
+            pred_value = self.predict(pd.DataFrame([input_data])).ravel()
+        # print(pred_value, ' ' , type(pred_value))
         if isinstance(pred_value, np.ndarray):
-            pred_value = pred_value[0]
-        prediction["prediction"] = pred_value
+            prediction = pred_value.tolist()
+        else:
+            prediction["prediction"] = pred_value
         return prediction
 
 

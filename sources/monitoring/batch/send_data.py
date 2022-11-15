@@ -99,8 +99,10 @@ if __name__ == "__main__":
                 headers={"Content-Type": "application/json"},
                 data=data,
             ).json()
+            if isinstance(response, list):
+                if len(response) == 1:
+                    prediction = response[0]
+            print(f"prediction: {prediction}")
 
-            print(f"prediction: {response['prediction']}")
-
-            save_to_db(collection, response)
+            save_to_db(collection, {"prediction": prediction})
             sleep(1)

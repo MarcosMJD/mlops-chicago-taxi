@@ -24,19 +24,19 @@ repos:
     - id: black
       language_version: python3.9
 
-- repo: local
-  hooks:
-    - id: pylint
-      name: pylint
-      entry: pylint
-      language: system
-      types: [python]
-      args: [
-        "-rn", # Only display messages
-        "-sn", # Don't display the score
-        "--recursive=y",
-        "--rcfile=./sources/pyproject.toml"
-      ]
+# - repo: local
+#   hooks:
+#     - id: pylint
+#       name: pylint
+#       entry: pylint
+#       language: system
+#       types: [python]
+#       args: [
+#         "-rn", # Only display messages
+#         "-sn", # Don't display the score
+#         "--recursive=y",
+#         "--rcfile=./sources/pyproject.toml"
+#       ]
 
 # We do not call pytest directly
 # We set entry to the run.sh script that changes the directory to
@@ -46,12 +46,12 @@ repos:
 # If we use entry pytest, the working directory is the one where git repo exists
 # and modules will not be found
 
-- repo: local
-  hooks:
-    - id: pytest-check
-      name: pytest-check
-      entry: "./sources/tests/unit_tests/run.sh"
-      language: system
-      types: [python]
-      pass_filenames: false
-      always_run: true
+# - repo: local
+#   hooks:
+#     - id: pytest-check
+#       name: pytest-check
+#       entry: "./sources/tests/unit_tests/run.sh"
+#       language: system
+#       types: [python]
+#       pass_filenames: false
+#       always_run: true

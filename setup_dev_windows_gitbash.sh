@@ -15,8 +15,10 @@ cd sources
 
 CURRENT_PATH="."
 if [ -d $CURRENT_PATH ] && [[ ":$PYTHONPATH:" != *":$CURRENT_PATH:"* ]]; then
-    PYTHONPATH="${PYTHONPATH:+"$PYTHONPATH:"}$CURRENT_PATH"
+    export PYTHONPATH="${PYTHONPATH:+"$PYTHONPATH:"}$CURRENT_PATH"
 fi
 
+# Will only work if the base environment has prefect.
+# There is no way to run pipenv shell prefect... in Windows, in Linux, it works
 prefect.exe config set PREFECT_API_URL="http://$PREFECT_EXTERNAL_IP:8080/api"
 pipenv shell

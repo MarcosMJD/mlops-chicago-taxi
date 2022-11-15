@@ -25,13 +25,9 @@ class Preprocessor:
         self.verbose = verbose
         self.analyse = analyse
 
-    def read_dataframe_csv(
-        self,
-        file_path: str,
-        parse_dates: List[str],
-        dtype: dict = {"Pickup Community Area": "str", "Dropoff Community Area": "str"},
-    ):
+    def read_dataframe_csv(self, file_path: str, parse_dates: List[str], dtype: dict):
 
+        # Ensure that columns in dtype are correctly read as strings.
         df = pd.read_csv(file_path, parse_dates=parse_dates, dtype=dtype)
         df.columns = df.columns.str.lower().str.replace(" ", "_")
         output_file_name = file_path.replace("csv", "parquet")
@@ -88,21 +84,31 @@ class Preprocessor:
         numerical_features: List[str],
     ):
         """
+        1.- Filter
+        drop records where trip_seconds are NaNs
+        drops records where trip_seconds < 60 or > 4000 (outliers)
 
-        drop records where, trip_start_timestamp, trip_seconds are NaNs
-        drops records where trip_seconds < 60 or > 4000
+        2.- Fix values and column types
+            Nothing to to.
+            Eg. When numerical columns that are seen as categorical because there are values with '-' instead of NaN. -> Fix:
+                pd.to_numeric(... , coerce).
+                And Convert values to 0 (or mean())
+            Columnt type conversions (not needed for the pickup_community_area and dropoff, since thery are read as strings from csv)
+            2a.- Categorical
+            categorical fillnans with -1
+            categorical to str
+            categorical value formatting
+
+        2.- Target
         create duration in minutes as target
 
-        categorical fillnans with -1
-        categorical to str
-        categorical value formatting
-
+        3.- Return feature columns and target
         keep only categorical and numerical features
         Return df and target
         """
 
         df = df[df.trip_seconds.notnull()]
-        df = df[df.trip_start_timestamp.notnull()]
+        # df = df[df.trip_start_timestamp.notnull()]
         df = df[(df.trip_seconds > 60) & (df.trip_seconds < 3600)]
         df["duration"] = df["trip_seconds"] / 60
 
@@ -146,7 +152,6 @@ class Preprocessor:
 
     def prepare_features(
         self,
-        dv: DictVectorizer,
         dicts: dict,
         y: np.ndarray,
         fit: bool = True,
@@ -167,18 +172,13 @@ class Preprocessor:
         self,
         csv_file_path: str,
         parse_dates: List[str],
-        dtype: dict,
         target: str,
         categorical_features: List[str],
-        dv: DictVectorizer,
-        dv_fit: bool = True,
+        dtype: dict,
     ):
 
         file_path = self.read_dataframe_csv(csv_file_path, parse_dates, dtype)
         df_raw = self.read_dataframe_parquet(file_path)
-
-        if dv is None:
-            dv = DictVectorizer()
 
         if self.analyse:
             self.analyse_dataframe(df_raw, target)
@@ -187,13 +187,7 @@ class Preprocessor:
             df_raw, categorical_features, numerical_features=[]
         )
 
-        dicts = self.prepare_dictionaries(
-            df, categorical_features, numerical_features=[]
-        )
-
-        X, y, dv = self.prepare_features(dv, dicts, y, dv_fit)
-
-        return X, y, dv, dicts
+        return df, y
 
 
 if __name__ == "__main__":
@@ -225,13 +219,10 @@ if __name__ == "__main__":
 
     preprocessor = Preprocessor(verbose=True, analyse=False)
     dv = DictVectorizer()
-    print(DTYPE)
     X, y, dv, dicts = preprocessor.process(
         csv_file_path=TRAIN_PATHFILE,
         parse_dates=DATE_FIELDS,
-        dtype=DTYPE,
         target=TARGET,
         categorical_features=CATEGORICAL_FEATURES,
-        dv=dv,
-        dv_fit=True,
+        dtype=DTYPE,
     )

@@ -17,7 +17,8 @@ The application will be able to predict the duration of a taxi trip in the city 
   - [Dataset](#dataset)
   - [Technologies and tools](#technologies-and-tools)
   - [1. Requirements and setup (in the developer machine)](#1-requirements-and-setup-in-the-developer-machine)
-  - [2.- Fork and clone repo. Prepare AWS credentials](#2--fork-and-clone-repo-prepare-aws-credentials)
+    - [1.1. EC2 Development machine with IaC:](#11-ec2-development-machine-with-iac)
+    - [1.2. Own development machine:](#12-own-development-machine)
   - [3.- Install dependencies](#3--install-dependencies)
   - [4.- Install pre-commit hooks](#4--install-pre-commit-hooks)
   - [5.- Infrastructure](#5--infrastructure)
@@ -33,6 +34,8 @@ The application will be able to predict the duration of a taxi trip in the city 
   - [9. ML project cifecycle: CD - Model deployment](#9-ml-project-cifecycle-cd---model-deployment)
   - [10. Monitoring](#10-monitoring)
   - [Notes](#notes)
+    - [Development VM](#development-vm)
+    - [Lambda image update after new ECR image is pushed](#lambda-image-update-after-new-ecr-image-is-pushed)
   - [Bugs](#bugs)
   - [ToDo](#todo)
   - [Improvements](#improvements)
@@ -69,16 +72,44 @@ The goal is to implement a maturity level between 3 and 4 according to Microsoft
 
 ## 1. Requirements and setup (in the developer machine)
 
+I have used IaC to deploy a development EC2 machine, with the required setup including dependencies. So you only need to download [Terraform](#Terraform) to your machine and build the infrastructure, including the development machine.
+
+### 1.1. EC2 Development machine with IaC:
+
+- <a id="terraform">Terraform </a>
+  Terraform will be used to build the infrastructure as code. Terraform requires a status file to manage the infrastructure. This may be local or remote. In this case, we will use a remote file, stored in S3, so the S3 bucket has to be created manually.
+  - Download Terraform executable: `https://www.terraform.io/downloads` to ./infrastructure/deployment directory.
+    - Windows: Just save it to ./infrastructure/deployment directory
+    - Linux: Follow the instructions on `https://www.terraform.io/downloads`
+
+  - <a id="terraform-bucket">Create terraform backend bucket to keep Terraform state:</a>
+    Note: bucket names shall be unique. Choose your location accordingly.
+    Note: bucket is private, but anyone with appropriate permissions can grant public access to objects.
+    ```bash
+    aws s3api create-bucket --bucket [your bucket name] --create-bucket-configuration LocationConstraint=eu-west-1
+    ```
+
+  - Follow the instructions in the [Infrastructure](#5--infrastructure) section.  Do not test the infrastructure yet.
+
+- <a id="aws-github">Upload AWS credentials to your github repo:</a>
+  You will need to upload the AWS credentials to yout github repo in order to run the CI/CD workflows:
+  Please, follow the instructions in this video:
+  https://youtu.be/xkTWF9c33mU?list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK&t=1036
+
+- Open SSH connection to the instance:
+  You will find the SSH key under the infrastructure folder with the name ec2_ssh_key_dev-chicago_taxi.pem.
+  After you open the SSH session, you can test the infrastructure as explained in the [Infrastructure](#5--infrastructure) section.
+
+
+### 1.2. Own development machine:
+
+However, if you wish to setup a machine by yourself, please install these tools:
 - Python 3.9 (recommended to install Anaconda: https://www.anaconda.com/)
 - Docker
 - docker-compose
-
-You can follow the instructions in the following video to launch an EC2 instance on AWS and prepare the above tools, between others:
-https://www.youtube.com/watch?v=IXSiYkP23zo&list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK&index=3
-
 - Git (if you are using window: https://gitforwindows.org/)
 - Git Bash (only if you are using windows: https://gitforwindows.org/)
-- Github account with aws secrets set-up in the repository (that one forked by you, see below)
+- Github account with aws secrets set-up in the repository (that one forked by you, see below). To be used in CI/CD.
 - AWS account with permissions to create infrastructure
   - AWS access key (id and secret)
 - AWS cli (command line interface)
@@ -105,29 +136,18 @@ https://www.youtube.com/watch?v=IXSiYkP23zo&list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhE
         Default output format [None]:
       Check with aws sts get-caller-identity
       ```
-- Terraform
-  Terraform will be used to build the infrastructure as code. Terraform requires a status file to manage the infrastructure. This may be local or remote. In this case, we will use a remote file, stored in S3, so the S3 bucket has to be created manually.
-  - Download Terraform executable: `https://www.terraform.io/downloads`
-    - Windows: Just save it to ./infrastructure directory
-    - Linux: Follow the instructions on `https://www.terraform.io/downloads`
-  - Create terraform backend bucket to keep Terraform state:
-    Note: bucket names shall be unique. Choose your location accordingly.
-    Note: bucket is private, but anyone with appropriate permissions can grant public access to objects.
-    ```bash
-    aws s3api create-bucket --bucket [your bucket name] --create-bucket-configuration LocationConstraint=eu-west-1
-    ```
+  - Follow the instructions in the [Terraform](#terraform) section.
+    Do not forget to create the terraform backend bucket.
 
-## 2.- Fork and clone repo. Prepare AWS credentials
+  - Fork and clone repo. Prepare AWS credentials to work with github
 
-Go to: `https://github.com/MarcosMJD/mlops-chicago-taxi`
+    Go to: `https://github.com/MarcosMJD/mlops-chicago-taxi`
 
-And fork the repo
-Then clone the forked repo in your machine
-`git clone https://github.com/MarcosMJD/mlops-chicago-taxi`
+    And fork the repo
+    Then clone the forked repo in your machine
+    `git clone https://github.com/MarcosMJD/mlops-chicago-taxi`
 
-You will need to upload the AWS credentials to yout git repo in order to run the CI/CD workflows:
-Please, follow the instructions in this video:
-https://youtu.be/xkTWF9c33mU?list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK&t=1036
+    Follow the instructions in the [Upload AWS credentials to your github repo](#aws-github) section.
 
 
 ## 3.- Install dependencies
@@ -187,15 +207,16 @@ A serverless solution is used:
 
 **Important**
 It turns out that Windows uses CRLF in text files, but Linux uses LF.
-If main.tf has CRLF as the end of line. That will cause the CI/CD workflows to recreate the instances, because CI/CD converts them to LF, and Terraform sees that user_data has changed. To avoid this behavior, config the editor to use LF in main.tf file (i.e. in VS Code, in the status bar, click on CRLF to change to LF) and config git to keep this format with:
-`git config --global core.autocrlf false`
+If main.tf has CRLF as the end of line. That will cause the CI/CD workflows to recreate the instances, because CI/CD converts them to LF, and Terraform sees that user_data has changed. To avoid this behavior, this repo has been configured already with git config core.autocrlf false.
+Please, note that the editor has to be set up to use LF in main.tf file (i.e. in VS Code, in the status bar, click on CRLF to change to LF).
+If you with to set up this feature for all repos (not recommended), use `git config --global core.autocrlf false`.
 
 The same happens with the files that triggers the building of the lambda image:
 chicago_taxi_prediction.py, Dockerfile and model_service.py. Use LF in these files as well.
 
 **In Windows, use Git Bash in this step**
 
-- Go to `infrastructure` directory, edit `stg.tfvars` and modify the variable `s3_bucket_name_suffix`
+- Go to `infrastructure\deployment` directory, edit `stg.tfvars` and modify the variable `s3_bucket_name_suffix`
 This variable is used to create the name of the S3 bucket, so suffix will avoid conflicts with existing buckets in your aws zone.
 
 - Edit `main.tf` file in `infrastructure` directory and modify the backend location for Terraform (the name of the S3 bucket you have created manually before)
@@ -216,11 +237,11 @@ This variable is used to create the name of the S3 bucket, so suffix will avoid 
   Terraform will automatically create the Lambda image and upload it to ECR (before creating the Lambda function).
   For the creation of the Lambda image, the files in the `production` folder will be used.
 
-  In order to have terraform output variables exported in the shell to be used later on, please, run the following command:
-  In Bitbash (Windows): `eval $(python.exe export_output.py)`
-  In Linux: `eval $(python export_output.py)`
+  In order to have terraform output variables exported in the shell to be used later on, in the root directory of the repo, run the followin command:
+  In Gitbash (Windows): `./setup_dev_windows_gitbash.sh`
+  In Linux: `./setup_dev_linux.sh`
 
-  Then, configure prefect libraries to be able to conect to the server API with the following command:
+  Please, note that this script also configures the prefect libraries to be able to conect to the server API with the following command:
   `prefect config set PREFECT_API_URL="http://<prefect-external-ip>:8080/api"`
 
 ### Test the infrastructure
@@ -456,6 +477,12 @@ Data drift shall be detected and a flow scheduled. You can check it in the prefe
 
 ## Notes
 
+### Development VM
+The development machine will install Anaconda, docker, docker-compose and pipenv, and also clone the repo
+Note that there is also a setup_vm.sh. This script may be used when a manual creation of the vm is performed, then a manual git clone is performed. And after execution of setup_vm.sh finishes, all of these programs are installed.
+There is also a setup_dev_linux.sh that will prepare the env vars from terraform so that the rest of the modules/scripts will work correcly with the infrastructure created.
+
+### Lambda image update after new ECR image is pushed
 Since we use tag latest and the same image name and same ECR, by simply terraform apply will make and push de image, but not update lambda function code (the container itself), because lambda parameters (those parameters used to create the lambda function) do not change.
 Check Terraform plan in CI phase. In CI phase, we set the env vars to default.
 In CD, we build and push the image again, but not update the lambda image. What we do is update the function configuration with the environment vars to update the model, these are not lambda parameters
@@ -463,61 +490,61 @@ To update lambda image, we need to use update-function-code --image-uri or do it
 Note: In CD, lambda is always relaunched, even if there is no change in the env vars. So latest model is used.
 
 ## Bugs
- - setup_dev_windows_gitbash.sh pipenv shell prefect.exe... does not work. So we are executing prefec before pipenv shell. This means that the main environment shall have prefect. In linux, setup_dev_linux, pipenv shell is run with the parameter prefect... So it works.
-
+- check setup_devs scripts. PYTHONPATH not added. Maybe shall be export PYTHONPATH? Check in Linux. In Windows is not working with source ./setup...sh
+- setup_dev_windows_gitbash.sh pipenv shell prefect.exe... does not work. So we are executing prefec before pipenv shell. This means that the main environment shall have prefect. In linux, setup_dev_linux, pipenv shell is run with the parameter prefect... So it works.
 
 ## ToDo
 
-Development
-  - Add sw version and model version over all stages. To keep track of predictions. i.e. Lambda loads model, and sets model version to prediction as well as the sw version of the lambda function which is passed as a parameter that changes in each commit.
-  - Make a Makefile with the minimum setup.
-    - add the . PYTHONPATH
-  - Check all scripts to be run from ./sources with PYTHONPATH = .
-    - And check where data is stored. Better use a common path under sources dir
-  - Refactor model service in producion and use it in monitor and development.
-  - Make a general Makefile
-    - ¿IaC en Makefile?
-  - Improve the performance of the model (feature engineering)
-  - Modify model and preprocessor to use pipeline or model
-  - Use design patterns
-  - Use parameters in the calls to __main__
-  - Allow model service to process batches of predictions
+- ML
+  - Improve the performance of the model (feature engineering). Hyperparameter tunning. Maybe cross data with weather info?
+  - ~~Use pipeline also for data preprocessing. Onehotencoder after dv to process numerical variables read as strings (pipckup, dropoff)~~
 
-- Launch an EC2 machine for developer and configure all the tools automatically.
-  - Set mlflow env var for the server
-  - Set prefect to use prefect server api
+- Development
+  - Use streamlit in development server to show interface to see IPs, and run manually the batch monitor, and request predictions.
+  - Preprocess in production, fill Nans with -1
+  - Use design patterns: factory and strategy
+  - Add sw version and model version over all stages. To keep track of predictions. i.e. Lambda loads model, and sets model version to prediction as well as the sw version of the lambda function which is passed as a parameter that changes in each commit.
+  - Make a Makefile in the main folder repo to run different parts of the code
+    - Don't forget to add the . PYTHONPATH if not exists yet
+    - ¿IaC in Makefile?
+  - Check where data is stored. Better use a common path under sources dir
+  - Refactor model service in producion if needed and use it in development.
+  - ~~Allow model service to process batches of predictions~~
+  - ~~Modify model and preprocessor to use pipeline or model, selected by user?~~ -> Now refactor using design patters (factory and strategy) uses pipelines only.
+  - Use parameters in the calls to __main__ in case user whish to run the modules separately from command line
 
 - Prefect
-  - Use Postgres in Prefect? Prefect recommends SQlite. Postgres only for heavy workloads
-  - More ignore files in prefect
+  - Pass parameters to prefect flows/deployment
   - Prefect Agent in EC2 (use Terraform prefect agent)
     - Check https://docs.prefect.io/concepts/infrastructure/ for different options
-  - Pass parameters to prefect flows/deployment
+  - Use Postgres in Prefect? Prefect recommends SQlite. Postgres only for heavy workloads
 
-- Manage the CI part when the image is updated with parameters "", since in CI a dummy model is in use. Well it does not matter since in CD the real model will be used anyway.
+- CI/CD
+  - Manage the CI part when the image is updated with parameters "", since in CI a dummy model is in use. Well it does not matter since in CD the real model will be used anyway.
 
 - Monitoring
-  - Get the model from mlflow registry
-  - Monitoring in real time in EC2?
   - Run monitoring in batch mode with prefect deployment - scheduled each month
+  - Monitoring in real time locally
+  - Monitoring in real time in EC2
   - Check why evidently raises error when batch monitoring and all columns are used. Check empty values?
 
 - Best practices
   - Fix problems with isort and black figthing each other.
     - https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html?highlight=imports#isort
-  - Check why aws config initialization fails when github actions if profile default is set in main.tf
   - Test localstack aws gateway + ECR + lambda + S3
+  - Check why aws config initialization fails when github actions if profile default is set in main.tf
 
 - IaC
   - Separate creation of s3 bucket, mlflow and prefect servers from the rest to avoid recreation of these in CD because of random generation number. Use random number generation again.
+  - Separate dev vm.
   - Manage passwords (e.g. database) in aws
     - mlflow https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-credentials.html
   - Make user_data in EC2 persistent, so that after reboot the ec2, it still works
   - Use S3 to store datasets?
-  - Check no cache when using pipenv in Dockerfile.
+  - Check no cache when using pipenv in Dockerfile. pip --no-cache-dir
   - If AWS changes amiid, the EC2 instances will be recreated. And then, prefect flows will be deleted. Fix this.
-    - If mlflow is recreated, it will detect a database version change, and will not run. It's needed to run mlflow db upgrade <database_uri> to fix it
-  - Setup ingress rules based on current ip address. Plave in stg.tfvars or with https://stackoverflow.com/questions/46763287/i-want-to-identify-the-public-ip-of-the-terraform-execution-environment-and-add
+  - If mlflow is recreated, it will detect a database version change, and will not run. It's needed to run mlflow db upgrade <database_uri> to fix it
+  - ~~Setup ingress rules based on current ip address. Set them in stg.tfvars or with https://stackoverflow.com/questions/46763287/i-want-to-identify-the-public-ip-of-the-terraform-execution-environment-and-add~~
 
 
 - MLflow

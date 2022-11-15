@@ -5,7 +5,7 @@ from datetime import datetime
 
 import mlflow
 import xgboost as xgb
-from model import Model
+from model import LinReg
 from prefect import flow, task, get_run_logger
 from hyperopt import STATUS_OK, Trials, hp, tpe, fmin
 from sklearn.svm import LinearSVR
@@ -63,54 +63,53 @@ def download_dataset(year: int, month: int, days: int, output_filename: str):
 def preprocess_datasets(TRAIN_PATHFILE: str, VAL_PATHFILE: str, TEST_PATHFILE: str):
 
     DATE_FIELDS = ["Trip Start Timestamp", "Trip End Timestamp"]
-    DTYPE = {"Pickup Community Area": str, "Dropoff Community Area": str}
     CATEGORICAL_FEATURES = ["pickup_community_area", "dropoff_community_area"]
     TARGET = "trip_seconds"
+    DTYPE = {"Pickup Community Area": str, "Dropoff Community Area": str}
 
     data_processor = Preprocessor(verbose=False, analyse=False)
-
-    dv = DictVectorizer()
-    X_train, y_train, dv, X_train_dicts = data_processor.process(
-        TRAIN_PATHFILE, DATE_FIELDS, DTYPE, TARGET, CATEGORICAL_FEATURES, dv, True
+    # Fit only the train dataset.
+    df_train, y_train = data_processor.process(
+        TRAIN_PATHFILE, DATE_FIELDS, TARGET, CATEGORICAL_FEATURES, dtype=DTYPE
     )
-    X_val, y_val, dv, X_val_dicts = data_processor.process(
-        VAL_PATHFILE, DATE_FIELDS, DTYPE, TARGET, CATEGORICAL_FEATURES, dv, False
+    df_val, y_val, = data_processor.process(
+        VAL_PATHFILE, DATE_FIELDS, TARGET, CATEGORICAL_FEATURES, dtype=DTYPE
     )
-    X_test, y_test, dv, X_test_dicts = data_processor.process(
-        TEST_PATHFILE, DATE_FIELDS, DTYPE, TARGET, CATEGORICAL_FEATURES, dv, False
+    df_test, y_test = data_processor.process(
+        TEST_PATHFILE, DATE_FIELDS, TARGET, CATEGORICAL_FEATURES, dtype=DTYPE
     )
     return (
-        X_train,
-        X_train_dicts,
+        df_train,
         y_train,
-        X_val,
-        X_val_dicts,
+        df_val,
         y_val,
-        X_test,
-        X_test_dicts,
+        df_test,
         y_test,
-        dv,
     )
 
 
 @task
 def train_models(
-    X_train,
-    X_train_dicts,
+    df_train,
     y_train,
-    X_val,
-    X_val_dicts,
+    df_val,
     y_val,
     TRAIN_PATHFILE,
     VAL_PATHFILE,
 ):
     # pylint: disable=unused-argument
     # pylint: disable=unused-variable
-    ensemble_models = [GradientBoostingRegressor, ExtraTreesRegressor]
-    basic_models = [LinearRegression, Lasso, Ridge]
-    svm_models = [LinearSVR]
+
+    categorical = ["pickup_community_area", "dropoff_community_area"]
+    numerical = []
+
+    ensemble_models = []  # GradientBoostingRegressor, ExtraTreesRegressor]
+    # basic_models = [LinearRegression] #, Lasso, Ridge]
+    basic_models = [LinReg]  # , Lasso, Ridge]
+    svm_models = []  # LinearSVR]
     model_classes = ensemble_models + basic_models + svm_models
-    model_params = [None, None, None, {"alpha": 0.1}, None, None]
+    # model_params = [None, None, None, {"alpha": 0.1}, None, None]
+    model_params = [None]
 
     for i, model_class in enumerate(model_classes):
 
@@ -120,19 +119,20 @@ def train_models(
             mlflow.log_param("train-data-path", TRAIN_PATHFILE)
             mlflow.log_param("val-data-path", VAL_PATHFILE)
 
-            model = Model(model_class, model_params[i])
+            model = model_class(categorical=categorical, numerical=numerical)
             print(f"Model class: {model}")
             if model_class in ensemble_models + svm_models:
-                model.fit(X_train_dicts, y_train.ravel())
+                model.fit(df_train, y_train.ravel())
             else:
-                model.fit(X_train_dicts, y_train)
+                model.fit(df_train, y_train)
 
-            y_pred = model.predict(X_val_dicts)
-            print(f"Sample number 51: {json.dumps(X_train_dicts[51])} => {y_pred[51]}")
+            y_pred = model.predict(df_val)
+            print(
+                f"Sample number 51: {json.dumps(df_train.iloc[155].tolist())} => {y_pred[155]}"
+            )
             rmse = mean_squared_error(y_val, y_pred, squared=False)
             mlflow.log_metric("val_rmse", rmse)
             print(f"total rmse = {rmse:.3f}")
-
     """
     xgb_X_train = xgb.DMatrix(X_train, label=y_train)
     xgb_X_val = xgb.DMatrix(X_val, label=y_val)
@@ -145,7 +145,7 @@ def register_models(
     tracking_uri: str,
     mlflow_experiment_name: str,
     mlflow_model_name: str,
-    X_test_dicts,
+    df_test,
     y_test,
     now,
 ):
@@ -172,13 +172,12 @@ def register_models(
         model_uri = f"runs:/{run_id}/model"
 
         model = mlflow.pyfunc.load_model(model_uri)
-        y_pred = model.predict(X_test_dicts)
+        y_pred = model.predict(df_test)
         test_rmse = mean_squared_error(y_test, y_pred, squared=False)
         print(f"Run id: {run_id}, test_rmse: {test_rmse:.3f}")
 
         # Update the metrics in these experiments
         client.log_metric(run.info.run_id, "test_rmse", test_rmse)
-
         model_version = mlflow.register_model(
             model_uri=model_uri,
             name=mlflow_model_name,
@@ -195,7 +194,7 @@ def register_models(
         name=mlflow_model_name,
         version=best_model.version,
         stage="Staging",
-        archive_existing_versions=False,
+        archive_existing_versions=True,
     )
 
     latest_versions = client.get_latest_versions(name=mlflow_model_name)
@@ -220,7 +219,6 @@ def main_flow(
     TRAIN_PATHFILE = f"{data_path}/{TRAIN_SET_NAME}"
     VAL_PATHFILE = f"{data_path}/{VAL_SET_NAME}"
     TEST_PATHFILE = f"{data_path}/{TEST_SET_NAME}"
-
     PROJECT_ID = os.getenv("PROJECT_ID") or "chicago_taxi"
     MLFLOW_TRACKING_URI = (
         os.getenv("MLFLOW_TRACKING_URI") or "http://52.213.112.212:8080"
@@ -229,7 +227,6 @@ def main_flow(
     MLFLOW_MODEL_NAME = os.getenv("MLFLOW_MODEL_NAME", "chicago-taxi")
 
     # Setup MLflow
-
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     # Use a subfolder in the S3 bucket
     mlflow.set_experiment(f"{MLFLOW_EXPERIMENT_NAME}")
@@ -240,8 +237,8 @@ def main_flow(
     # For instance, in windows, the flow is executed in a temp folder, not in the folder where the
     # agent is started.
 
-    logger = get_run_logger()
-    logger.info("Running flow...")
+    # logger = get_run_logger()
+    # logger.info("Running flow...")
 
     if not os.path.exists(data_path):
 
@@ -250,46 +247,29 @@ def main_flow(
 
     # Download datasets
 
-    if not os.path.exists(TRAIN_PATHFILE):
-        print(f"Downloading train set: {TRAIN_SET_NAME}")
-        download_dataset(year, train_month, num_of_days, TRAIN_PATHFILE)
-    else:
-        print("Train set already exists. Skipping download")
-
-    if not os.path.exists(VAL_PATHFILE):
-        print(f"Downloading val set: {VAL_SET_NAME}")
-        download_dataset(year, val_month, num_of_days, VAL_PATHFILE)
-    else:
-        print("Val set already exists. Skipping download")
-
-    if not os.path.exists(TEST_PATHFILE):
-        print(f"Downloading test set: {TEST_SET_NAME}")
-        download_dataset(year, test_month, num_of_days, TEST_PATHFILE)
-    else:
-        print("Test set already exists. Skipping download")
+    for dataset_pathfile in [TRAIN_PATHFILE, VAL_PATHFILE, TEST_PATHFILE]:
+        if not os.path.exists(dataset_pathfile):
+            print(f"Downloading train set: {dataset_pathfile}")
+            download_dataset(year, train_month, num_of_days, dataset_pathfile)
+        else:
+            print("{dataset_pathfile} set already exists. Skipping download")
 
     # Prepare X and y.
     (
-        X_train,
-        X_train_dicts,
+        df_train,
         y_train,
-        X_val,
-        X_val_dicts,
+        df_val,
         y_val,
-        X_test,
-        X_test_dicts,
+        df_test,
         y_test,
-        dv,
     ) = preprocess_datasets(TRAIN_PATHFILE, VAL_PATHFILE, TEST_PATHFILE)
 
     now = datetime.now().timestamp() * 1000
     # Train a set of models
     train_models(
-        X_train,
-        X_train_dicts,
+        df_train,
         y_train,
-        X_val,
-        X_val_dicts,
+        df_val,
         y_val,
         TRAIN_PATHFILE,
         VAL_PATHFILE,
@@ -300,13 +280,13 @@ def main_flow(
         MLFLOW_TRACKING_URI,
         MLFLOW_EXPERIMENT_NAME,
         MLFLOW_MODEL_NAME,
-        X_test_dicts,
+        df_test,
         y_test,
         now,
     )
 
 
-@flow
+# @flow
 def _main_flow(
     data_path: str = "data",
     year: int = 2022,
@@ -328,5 +308,4 @@ if __name__ == "__main__":
     VAL_MONTH = 3
     TEST_MONTH = 4
     NUM_OF_DAYS = 2
-    print(DATA_PATH)
     main_flow(DATA_PATH, YEAR, TRAIN_MONTH, VAL_MONTH, TEST_MONTH, NUM_OF_DAYS)
