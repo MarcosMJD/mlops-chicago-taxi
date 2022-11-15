@@ -495,6 +495,11 @@ Note: In CD, lambda is always relaunched, even if there is no change in the env 
 
 ## ToDo
 
+- Decide if setup vm with iac or with sh (after cloning repo)
+- Fix readme for the vm, after setupvm, iac and then setup_dev_linux?
+- Fix setup_vm script, after newgrp, a new shell is opened, so pipenv will not run. Check https://unix.stackexchange.com/questions/18897/problem-while-running-newgrp-command-in-script
+- Fix managment of batches (arrays). Keep id of the trip and so on.
+
 - ML
   - Improve the performance of the model (feature engineering). Hyperparameter tunning. Maybe cross data with weather info?
   - ~~Use pipeline also for data preprocessing. Onehotencoder after dv to process numerical variables read as strings (pipckup, dropoff)~~
