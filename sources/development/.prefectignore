@@ -2,6 +2,8 @@
 Pipfile
 Pipfile.*
 *.ipynb
+**/monitoring/
+**/production/
 
 # prefect artifacts
 .prefectignore
