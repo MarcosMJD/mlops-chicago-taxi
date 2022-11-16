@@ -4,16 +4,12 @@ from pathlib import Path
 from datetime import datetime
 
 import mlflow
-import xgboost as xgb
-from model import LinReg
+
+from model import LinReg, GBRegressor
 from prefect import flow, task, get_run_logger
 from hyperopt import STATUS_OK, Trials, hp, tpe, fmin
-from sklearn.svm import LinearSVR
 from hyperopt.pyll import scope
 from sklearn.metrics import mean_squared_error
-from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor
-from sklearn.linear_model import Lasso, Ridge, LinearRegression
-from sklearn.feature_extraction import DictVectorizer
 
 from development import downloader
 from development.preprocessor import Preprocessor
@@ -103,7 +99,7 @@ def train_models(
     categorical = ["pickup_community_area", "dropoff_community_area"]
     numerical = []
 
-    ensemble_models = []  # GradientBoostingRegressor, ExtraTreesRegressor]
+    ensemble_models = [GBRegressor]  # GradientBoostingRegressor, ExtraTreesRegressor]
     # basic_models = [LinearRegression] #, Lasso, Ridge]
     basic_models = [LinReg]  # , Lasso, Ridge]
     svm_models = []  # LinearSVR]

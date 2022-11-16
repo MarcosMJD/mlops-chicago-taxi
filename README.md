@@ -32,7 +32,8 @@ The application will be able to predict the duration of a taxi trip in the city 
     - [Tests](#tests)
     - [CI](#ci)
   - [9. ML project cifecycle: CD - Model deployment](#9-ml-project-cifecycle-cd---model-deployment)
-  - [10. Monitoring](#10-monitoring)
+  - [10. Front-end app](#10-front-end-app)
+  - [11. Monitoring](#11-monitoring)
   - [Notes](#notes)
     - [Development VM](#development-vm)
     - [Lambda image update after new ECR image is pushed](#lambda-image-update-after-new-ecr-image-is-pushed)
@@ -433,7 +434,12 @@ Got to `sources/tests directory` and run:
 `python ./test_api_gateway_lambda.py`
 
 
-## 10. Monitoring
+## 10. Front-end app
+Front-end end user dashboard has been developed in order to facilitate testing and accessing mlflow and prefect servers.
+In order to run it, please, go to `sources\production` directory and run ` streamlit run front-end.py --server.port 8080`
+Open the url and test.
+
+## 11. Monitoring
 
 IMORTANT NOTE:
 During the CI/CD phase, for some reason, the mlflow and prefect servers may have been recreated, because Terraform sees that used data has changed, but it has not.
@@ -490,8 +496,8 @@ To update lambda image, we need to use update-function-code --image-uri or do it
 Note: In CD, lambda is always relaunched, even if there is no change in the env vars. So latest model is used.
 
 ## Bugs
-- check setup_devs scripts. PYTHONPATH not added. Maybe shall be export PYTHONPATH? Check in Linux. In Windows is not working with source ./setup...sh
-- setup_dev_windows_gitbash.sh pipenv shell prefect.exe... does not work. So we are executing prefec before pipenv shell. This means that the main environment shall have prefect. In linux, setup_dev_linux, pipenv shell is run with the parameter prefect... So it works.
+- check setup_devs scripts. PYTHONPATH not added. Maybe shall be export PYTHONPATH? Check in Linux. In Windows is not working with source ./setup...sh. Workaround: run the scripts before activating the environment, since the script activates the environment.
+- setup_dev_windows_gitbash.sh pipenv shell prefect.exe... does not work. So we are executing prefec before pipenv shell. This means that the main environment shall have prefect. In linux, setup_dev_linux, pipenv shell is run with the parameter prefect... So it works. Workaround: install prefect in main environment.
 
 ## ToDo
 
@@ -505,7 +511,8 @@ Note: In CD, lambda is always relaunched, even if there is no change in the env 
   - ~~Use pipeline also for data preprocessing. Onehotencoder after dv to process numerical variables read as strings (pipckup, dropoff)~~
 
 - Development
-  - Use streamlit in development server to show interface to see IPs, and run manually the batch monitor, and request predictions.
+  - ~~Use streamlit in development server to show interface to see IPs, and run manually the pipeline and request predictions.~~
+  - Use streamlit to run manually batch monitor
   - Preprocess in production, fill Nans with -1
   - Use design patterns: factory and strategy
   - Add sw version and model version over all stages. To keep track of predictions. i.e. Lambda loads model, and sets model version to prediction as well as the sw version of the lambda function which is passed as a parameter that changes in each commit.
@@ -557,7 +564,7 @@ Note: In CD, lambda is always relaunched, even if there is no change in the env 
 
 ## Improvements
 
-  - Streamlit app for as the used interface to send requests. Likely some mapping or similar.
+
 
 
 ## Useful commands and snippets

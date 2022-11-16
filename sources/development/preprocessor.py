@@ -138,7 +138,7 @@ class Preprocessor:
             print(f"\nnumerical_features: {numerical_features}")
             print(f"\ntarget: {target}")
 
-        return df[categorical_features + numerical_features], df[target]
+        return df[categorical_features + numerical_features], df[target].values
 
     def prepare_dictionaries(
         self,
