@@ -89,7 +89,7 @@ if __name__ == "__main__":
             # Write to file the target values (converted to minutes as we did in the trainning)
             # Preprocessor has created duration field already
             # target is a np array of shape n_samples, 1
-            f_target.write(f"{record['trip_id']},{target.values[i,0]}\n")
+            f_target.write(f"{record['trip_id']},{target[i,0]}\n")
 
             # Request the prediction to prediction service
             data = json.dumps(record, cls=DateTimeEncoder)
@@ -103,6 +103,6 @@ if __name__ == "__main__":
                 if len(response) == 1:
                     prediction = response[0]
             print(f"prediction: {prediction}")
-
-            save_to_db(collection, {"prediction": prediction})
+            record['prediction'] = prediction
+            save_to_db(collection, record)
             sleep(1)
