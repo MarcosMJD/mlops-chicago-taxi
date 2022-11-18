@@ -10,7 +10,7 @@ def render(api_gateway_base_url, mlflow_external_ip, prefect_external_ip):
     st.title('MLOps front-end demo')
 
     api_gateway_base_uri = f"{api_gateway_base_url}/predict"
-    CATEGORIES = [
+    AREAS = [
         '-1',
         '1',
         '10',
@@ -120,7 +120,7 @@ def render(api_gateway_base_url, mlflow_external_ip, prefect_external_ip):
     st.markdown("After clicking, go to the Prefect server URI and check the running flow.")
     st.markdown("After the flow finishes, go to MLflow uri and check the experiments and registered models.")
 
-    st.button("Execute batch monitor", help="Run batch monitor with reference data and actual predicted data. After finishing, you can click to open the report.", on_click=run_bath_monitor, disabled=True)
+    st.button("Execute batch monitor", help="Run batch monitor with reference data and actual predicted data. After finishing, you can click to open the report.", on_click=run_bath_monitor)
     
 
     api_uri = st.text_input(
@@ -129,37 +129,25 @@ def render(api_gateway_base_url, mlflow_external_ip, prefect_external_ip):
         type="default",
         help="The URI of the ML server running on, <url>:<port>/predict. May be localhost or any other external url",
     )
-    
-    amt = st.number_input("Amount", min_value=0.0, max_value=100000.0, value=876.9)
-    gender = st.selectbox("gender", ["m", "f"], index=0)
-    city_pop = st.number_input("City Population", min_value=0, max_value=10000000, value=805, help="Credit Card Holder's City Population")
-    hour_of_trans= st.number_input("Hour", min_value=0, max_value=23, value=22, help="Hour of transaction")
-    day_of_trans= st.number_input("Day", min_value=0, max_value=31, value=1, help="Day of transaction")
-    age = st.number_input("Age", min_value=0, max_value=99, value=50, help="Age of the card's holder")
-    category = st.selectbox("Category of Merchant", ["shopping_net","misc_pos"], index=0)
+
+    pickup_community_area = st.selectbox("Pickup Community Area", AREAS, index=3)
+    dropoff_community_area = st.selectbox("Dropoff Community Area", AREAS, index=2)
+    trip_id = str(uuid.uuid4())
 
     features = {
-        "category": category,
-        "amt": amt,
-        "gender": gender,
-        "city_pop": city_pop,
-        "hour_of_trans": hour_of_trans,
-        "day_of_trans": day_of_trans,
-        "age": age
+        "pickup_community_area": pickup_community_area,
+        "dropoff_community_area": dropoff_community_area,
+        "trip_id": trip_id,
     }
 
     response = requests.post(url=api_uri, json=features)
     prediction = response.json()
-    print(prediction)
 
     if isinstance(prediction, list):
         if len(prediction) == 1:
             prediction = prediction[0]
-    if prediction == 1:
-        prediction = "yes"
-    else:
-        prediction = "no"
-    st.header(f"Is fraud = {prediction}")
+
+    st.header(f"Predicted trip time = {prediction:02f} minutes")
 
     st.image("../assets/chicago-taxi-infrastructure.jpg")
     st.image("../assets/ml-lifecycle-mlops-eternal-knot.png")

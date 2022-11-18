@@ -199,7 +199,7 @@ def main_flow():
     mlflow.sklearn.autolog()
 
     df_raw = pd.read_csv(
-        "./development/data/fraudTrain.csv",
+        "s3://stg-chicago-taxi-mmjd/data/fraudTrain.csv",
         parse_dates=['trans_date_trans_time', 'dob'],
         index_col=0,
     )
