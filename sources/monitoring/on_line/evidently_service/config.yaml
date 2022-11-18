@@ -1,0 +1,20 @@
+datasets:
+  taxi:
+    column_mapping:
+      categorical_features:
+        - "pickup_community_area"
+        - "dropoff_community_area"
+      numerical_features:
+    data_format:
+      header: true
+      separator: ','
+    monitors:
+      - data_drift
+    reference_file: ./datasets/Taxi_Trips_2022_04.csv
+service:
+  calculation_period_sec: 2
+  min_reference_size: 30
+  moving_reference: false
+  datasets_path: datasets
+  use_reference: true
+  window_size: 5
